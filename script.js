@@ -10,6 +10,7 @@ const progressBarBg = document.getElementById('progress-bar-bg');
 const progressBar = document.getElementById('progress-bar');
 const sessionsContainer = document.getElementById('sessions-container');
 const languageSelect = document.getElementById('language-select');
+const modelSelectWrapper = document.getElementById('model-select-wrapper');
 const modelSelect = document.getElementById('model-select');
 
 const recordBtn = document.getElementById('record-btn');
@@ -41,7 +42,7 @@ function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
 // Update model select color immediately
 function updateSelectColor() {
     const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-    modelSelect.style.setProperty('--select-color', selectedOption.dataset.color);
+    modelSelectWrapper.style.setProperty('--select-color', selectedOption.dataset.color);
 }
 modelSelect.addEventListener('change', () => {
     updateSelectColor();
@@ -57,7 +58,7 @@ updateSelectColor();
 async function initModel() {
     const selectedModel = modelSelect.value;
     const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-    modelSelect.style.setProperty('--select-color', selectedOption.dataset.color);
+    modelSelectWrapper.style.setProperty('--select-color', selectedOption.dataset.color);
 
     if (recognizer && currentModel === selectedModel) return;
 
@@ -183,7 +184,7 @@ processBtn.addEventListener('click', async () => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = \`transcription_\${sessionId}.txt\`;
+            a.download = `transcription_${sessionId}.txt`;
             a.click();
             URL.revokeObjectURL(url);
         });
@@ -245,3 +246,29 @@ recordBtn.addEventListener('click', async () => {
     }
 });
 
+// Auto detect language from browser
+const userLang = navigator.language || navigator.userLanguage;
+const baseLang = userLang.split('-')[0];
+
+const langMap = {
+    'en': 'english',
+    'ru': 'russian',
+    'es': 'spanish',
+    'fr': 'french',
+    'de': 'german',
+    'zh': 'chinese',
+    'ja': 'japanese',
+    'ko': 'korean',
+    'pt': 'portuguese',
+    'it': 'italian'
+};
+
+if (langMap[baseLang]) {
+    const langVal = langMap[baseLang];
+    for (let i = 0; i < languageSelect.options.length; i++) {
+        if (languageSelect.options[i].value === langVal) {
+            languageSelect.selectedIndex = i;
+            break;
+        }
+    }
+}
