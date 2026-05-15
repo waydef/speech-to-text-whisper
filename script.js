@@ -260,6 +260,7 @@ processBtn.addEventListener('click', async () => {
     } finally {
         processBtn.disabled = false;
         recordBtn.disabled = false;
+        recordBtn.classList.remove('btn-processing');
         setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
     }
 });
@@ -308,6 +309,7 @@ recordBtn.addEventListener('click', async () => {
         recordBtn.classList.remove('recording');
         
         if (autoTranscribeCb.checked) {
+            recordBtn.classList.add('btn-processing');
             setBtnText(recordBtnText, recordBtnIcon, 'processing...', 'fa-spinner fa-spin');
         } else {
             setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
