@@ -1,559 +1,269 @@
-/* Переменные для цветов и общих стилей */
 :root {
-    /* Цвета для Светлой темы */
-    --light-bg-start: #eef2f6;
-    --light-bg-end: #e0e6eb;
-    --light-container-bg: #ffffff;
-    --light-text-primary: #333d47;
-    --light-text-secondary: #6b7a8d;
-    --light-accent: #007bff; /* Классический синий */
-    --light-accent-hover: #0056b3;
-    --light-card-bg: #f8fbfd;
-    --light-border: #dae3ec;
-    --light-shadow-color: rgba(40, 50, 60, 0.15); /* Более темная и выраженная тень */
-    --light-icon-color: #007bff;
-
-    /* Цвета для Темной темы */
-    --dark-bg-start: #0F1C3F; /* Глубокий индиго */
-    --dark-bg-end: #1E3A5F;   /* Более светлый индиго */
-    --dark-container-bg: #1A2E4C; /* Средний индиго для контейнера */
-    --dark-text-primary: #E6EBF0;
-    --dark-text-secondary: #A9B7C7;
-    --dark-accent: #FF577F; /* Яркий, сочный малиновый */
-    --dark-accent-hover: #E84D71;
-    --dark-card-bg: #2B4265; /* Карточки с легким оттенком */
-    --dark-border: #3D5A80;
-    --dark-shadow-color: rgba(0, 0, 0, 0.7); /* Глубокая тень */
-    --dark-icon-color: #FF577F;
-
-    /* Общие переменные */
-    --border-radius-main: 30px; /* Сильные закругления */
-    --border-radius-elements: 18px; /* Закругления для кнопок/полей */
-    --transition-speed: 0.4s ease-in-out; /* Плавные переходы */
-    --button-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    --button-shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.45);
-    --text-shadow-light: 0px 1px 1px rgba(0,0,0,0.1);
-    --text-shadow-dark: 0px 2px 4px rgba(0,0,0,0.4);
+    --bg: #050505;
+    --card-bg: rgba(255, 255, 255, 0.03);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --accent: #95c2a6;
+    --accent-glow: rgba(149, 194, 166, 0.2);
+    --text: #ffffff;
+    --text-dim: #a0a0a0;
+    --error: #ff5f5f;
 }
 
-/* Общие стили для body */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
-    font-family: 'Roboto', sans-serif; /* Основной шрифт */
+    font-family: 'Montserrat', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    transition: background var(--transition-speed), color var(--transition-speed);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    position: relative;
-    overflow: hidden; /* Предотвращаем скролл из-за градиента */
+    padding: 20px;
+    overflow-x: hidden;
 }
 
-/* Стили для Темной темы (по умолчанию) */
-body.dark-theme {
-    background: linear-gradient(135deg, var(--dark-bg-start) 0%, var(--dark-bg-end) 100%);
-    color: var(--dark-text-primary);
+/* Background effects */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(149, 194, 166, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
 }
 
-body.dark-theme .container {
-    background: linear-gradient(145deg, var(--dark-container-bg), var(--dark-bg-end));
-    box-shadow: 0 20px 60px var(--dark-shadow-color);
-    border: 1px solid var(--dark-border);
-}
-
-/* Градиентный текст для заголовков в темной теме */
-body.dark-theme h1,
-body.dark-theme .section-title {
-    background: linear-gradient(90deg, var(--dark-accent), #FF8C94); /* Яркий градиент */
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: var(--text-shadow-dark); /* Объемная тень для текста */
-}
-body.dark-theme .main-title-icon,
-body.dark-theme .section-icon {
-    color: var(--dark-accent); /* Иконки акцентного цвета */
-    filter: drop-shadow(0 0 5px var(--dark-accent)); /* Легкое свечение */
-}
-
-body.dark-theme .description {
-    color: var(--dark-text-secondary);
-}
-
-body.dark-theme .card-section {
-    background: var(--dark-card-bg);
-    border: 1px solid var(--dark-border);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.25); /* Более глубокая внутренняя тень */
-}
-
-body.dark-theme .action-button {
-    background: linear-gradient(45deg, var(--dark-accent) 0%, #FF8C94 100%);
-    box-shadow: var(--button-shadow);
-    color: white; /* Текст кнопок всегда белый для лучшего контраста */
-}
-body.dark-theme .action-button:hover:not(:disabled) {
-    background: linear-gradient(45deg, var(--dark-accent-hover) 0%, #FF707F 100%);
-    box-shadow: var(--button-shadow-hover);
-}
-
-body.dark-theme .custom-file-input {
-    background: var(--dark-card-bg);
-    border: 1px solid var(--dark-border);
-    color: var(--dark-text-primary);
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15);
-}
-body.dark-theme .custom-file-input:hover {
-    background: #3a5c88; /* Чуть светлее при наведении */
-}
-
-body.dark-theme .or-separator {
-    color: var(--dark-text-secondary);
-}
-
-body.dark-theme .message-box {
-    background: var(--dark-card-bg);
-    border: 1px solid var(--dark-border);
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15);
-    color: var(--dark-text-secondary);
-}
-body.dark-theme .message-box strong {
-    color: var(--dark-text-primary);
-}
-body.dark-theme .message-box .fas {
-    color: var(--dark-accent);
-}
-
-body.dark-theme .theme-toggle-button {
-    background: var(--dark-card-bg);
-    color: var(--dark-accent);
-    border: 1px solid var(--dark-border);
-    box-shadow: var(--button-shadow);
-}
-body.dark-theme .theme-toggle-button:hover {
-    background: var(--dark-accent);
-    color: white;
-    box-shadow: 0 0 20px var(--dark-accent); /* Свечение при наведении */
-}
-body.dark-theme .pulse-circle {
-    background-color: var(--dark-accent);
-}
-
-/* Стили для Светлой темы */
-body.light-theme {
-    background: linear-gradient(135deg, var(--light-bg-start) 0%, var(--light-bg-end) 100%);
-    color: var(--light-text-primary);
-}
-
-body.light-theme .container {
-    background: var(--light-container-bg);
-    box-shadow: 0 20px 60px var(--light-shadow-color);
-    border: 1px solid var(--light-border);
-}
-
-body.light-theme h1,
-body.light-theme .section-title {
-    color: var(--light-accent);
-    text-shadow: var(--text-shadow-light);
-}
-body.light-theme .main-title-icon,
-body.light-theme .section-icon {
-    color: var(--light-accent);
-}
-
-body.light-theme .description {
-    color: var(--light-text-secondary);
-}
-
-body.light-theme .card-section {
-    background: var(--light-card-bg);
-    border: 1px solid var(--light-border);
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .action-button {
-    background-color: var(--light-accent);
-    box-shadow: var(--button-shadow);
-}
-body.light-theme .action-button:hover:not(:disabled) {
-    background-color: var(--light-accent-hover);
-    box-shadow: var(--button-shadow-hover);
-}
-
-body.light-theme .custom-file-input {
-    background: var(--light-card-bg);
-    border: 1px solid var(--light-border);
-    color: var(--light-text-primary);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
-}
-body.light-theme .custom-file-input:hover {
-    background: #e4e9ef;
-}
-
-body.light-theme .or-separator {
-    color: var(--light-text-secondary);
-}
-
-body.light-theme .message-box {
-    background: var(--light-card-bg);
-    border: 1px solid var(--light-border);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
-    color: var(--light-text-secondary);
-}
-body.light-theme .message-box strong {
-    color: var(--light-text-primary);
-}
-body.light-theme .message-box .fas {
-    color: var(--light-accent);
-}
-
-body.light-theme .theme-toggle-button {
-    background: var(--light-card-bg);
-    color: var(--light-accent);
-    border: 1px solid var(--light-border);
-    box-shadow: var(--button-shadow);
-}
-body.light-theme .theme-toggle-button:hover {
-    background: var(--light-accent);
-    color: white;
-    box-shadow: 0 0 20px var(--light-accent);
-}
-body.light-theme .pulse-circle {
-    background-color: var(--light-accent);
-}
-
-/* Общие стили контейнера и элементов (не зависят от темы) */
 .container {
-    padding: 3.5rem; /* Увеличим отступы */
-    border-radius: var(--border-radius-main);
-    max-width: 750px; /* Чуть шире */
-    width: 90%;
-    text-align: center;
-    transition: background var(--transition-speed), box-shadow var(--transition-speed), border-color var(--transition-speed);
+    width: 100%;
+    max-width: 800px;
     position: relative;
     z-index: 1;
 }
 
 .main-title {
-    font-family: 'Montserrat', sans-serif; /* Красивый шрифт для заголовка */
-    font-size: 3.2rem; /* Увеличим размер */
-    margin-bottom: 0.8rem;
+    font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px; /* Больше расстояние */
-    letter-spacing: -0.03em; /* Чуть сжать буквы */
-    position: relative; /* Для эффектов */
-    line-height: 1.1;
-}
-.main-title-icon {
-    font-size: 3rem; /* Размер иконки */
-    transition: transform 0.3s ease-out, filter 0.3s ease-out;
-}
-.main-title:hover .main-title-icon {
-    transform: rotateY(180deg) scale(1.05); /* Поворот и легкое увеличение */
-    filter: brightness(1.2); /* Немного ярче */
+    text-transform: lowercase;
+    letter-spacing: -0.04em;
+    margin-bottom: 10px;
+    text-align: center;
+    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .description {
-    font-size: 1.25rem; /* Чуть больше */
-    margin-bottom: 3rem; /* Больше отступ */
-    line-height: 1.6;
-    opacity: 0.85;
-    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
 }
 
-.card-section {
-    margin-bottom: 3rem; /* Больше отступ */
-    padding: 2.2rem; /* Увеличим отступы внутри */
-    border-radius: var(--border-radius-elements);
-    transition: background var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
-.section-title {
-    font-family: 'Montserrat', sans-serif;
-    margin-top: 0;
-    margin-bottom: 1.8rem; /* Увеличим отступ */
-    font-size: 1.8rem; /* Увеличим размер */
+/* Drop Zone */
+.drop-zone {
+    border: 2px dashed var(--card-border);
+    border-radius: 16px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s ease;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(149, 194, 166, 0.05);
+}
+
+.drop-zone i {
+    font-size: 3rem;
+    color: var(--accent);
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.drop-zone p {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+/* Controls */
+.controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding-left: 5px;
+}
+
+select {
+    background: #111;
+    border: 1px solid var(--card-border);
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: 0.3s;
+}
+
+select:focus {
+    border-color: var(--accent);
+}
+
+/* Buttons */
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: #000;
     font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    letter-spacing: -0.02em;
-}
-.section-icon {
-    font-size: 1.6rem; /* Размер иконки */
-    transition: transform 0.2s ease-out;
-}
-.section-title:hover .section-icon {
-    transform: scale(1.1);
+    gap: 10px;
 }
 
-/* Стилизация скрытого инпута для файла через label */
-.hidden-file-input {
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px var(--accent-glow);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status & Progress */
+.status-container {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid var(--card-border);
+}
+
+.status-text {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
     display: none;
 }
 
-.custom-file-input {
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+/* Result Area */
+.result-container {
+    margin-top: 30px;
+    display: none;
+}
+
+.result-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    padding: 18px 25px; /* Больше padding */
-    margin-bottom: 20px; /* Отступ от кнопки */
-    border-radius: var(--border-radius-elements);
-    cursor: pointer;
-    font-size: 1.2rem; /* Больше шрифт */
-    font-weight: 600;
-    transition: background var(--transition-speed), border-color var(--transition-speed), box-shadow 0.3s ease, transform 0.2s ease;
-    box-sizing: border-box;
-    text-shadow: var(--text-shadow-light); /* Легкая тень для текста */
-}
-.custom-file-input:hover {
-    transform: translateY(-3px); /* Чуть больше подъем */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); /* Более выраженная тень */
-}
-.custom-file-input:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-.custom-file-input .fas {
-    font-size: 1.4rem; /* Больше иконка */
+    margin-bottom: 15px;
 }
 
+.result-header h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+}
 
-.action-button {
-    width: 100%;
-    padding: 18px 25px; /* Больше padding */
-    border: none;
-    border-radius: var(--border-radius-elements);
-    font-size: 1.25rem; /* Больше шрифт */
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.3s ease, opacity 0.3s ease, background var(--transition-speed);
-    font-weight: 700;
+.action-links {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    text-shadow: 0px 1px 3px rgba(0,0,0,0.3); /* Тень для текста кнопки */
+    gap: 15px;
 }
 
-.action-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    background: #555 !important; /* Убрать градиент при disabled */
-}
-
-.action-button .fas {
-    font-size: 1.4rem; /* Больше иконка */
-}
-
-.or-separator {
-    margin: 3rem 0; /* Больше отступ */
-    font-size: 1.3rem;
-    font-weight: 500;
+.action-link {
+    font-size: 0.7rem;
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
     opacity: 0.7;
-    letter-spacing: 1px; /* Разряженность */
-    position: relative;
-}
-.or-separator::before,
-.or-separator::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 40%;
-    height: 1px;
-    background-color: currentColor; /* Цвет линии как у текста */
-    opacity: 0.2;
-}
-.or-separator::before {
-    left: 0;
-}
-.or-separator::after {
-    right: 0;
+    transition: 0.2s;
 }
 
-.record-controls {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+.action-link:hover {
+    opacity: 1;
 }
 
-.record-button {
-    flex: 1;
-    min-width: 200px; /* Чуть шире */
-}
-
-.recording-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px; /* Больше расстояние */
-    margin-top: 25px; /* Больше отступ */
-    font-weight: 700; /* Жирнее */
-    font-size: 1.3rem; /* Больше */
-    color: var(--dark-accent);
-    filter: drop-shadow(0 0 5px var(--dark-accent)); /* Легкое свечение */
-}
-
-/* Анимация пульсации для индикатора записи */
-.pulse-circle {
-    width: 20px; /* Больше */
-    height: 20px;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite ease-out;
-}
-body.light-theme .pulse-circle {
-    background-color: var(--light-accent);
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.7); opacity: 0.7; }
-    50% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(0.7); opacity: 0.7; }
-}
-
-.message-box {
-    margin-top: 3rem; /* Больше отступ */
-    padding: 2rem; /* Больше padding */
-    border-radius: var(--border-radius-elements);
-    text-align: left;
-    font-size: 1.15rem; /* Чуть больше */
-    line-height: 1.7;
-    min-height: 80px; /* Чуть больше */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: background var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed);
-}
-.message-box strong {
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 0.8rem;
-    font-size: 1.25rem; /* Заголовок статуса больше */
-}
-.message-box .fas {
-    font-size: 1.3em;
-}
-
-.result-box .section-title {
-    margin-bottom: 1rem;
-    justify-content: flex-start;
-    font-size: 1.6rem; /* Заголовок результата больше */
-}
-.result-content {
+.result-text {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
     white-space: pre-wrap;
-    word-wrap: break-word;
-    opacity: 0.9;
-    flex-grow: 1;
-    font-weight: 500;
 }
 
-/* Переключатель темы */
-.theme-toggle-container {
-    position: absolute;
-    top: 30px;
-    right: 30px;
-    z-index: 10;
+/* Custom Scrollbar */
+.result-text::-webkit-scrollbar {
+    width: 6px;
+}
+.result-text::-webkit-scrollbar-thumb {
+    background: var(--card-border);
+    border-radius: 3px;
 }
 
-.theme-toggle-button {
-    width: 60px; /* Больше */
-    height: 60px;
-    border-radius: 50%;
-    font-size: 1.8rem; /* Больше иконка */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background var(--transition-speed), color var(--transition-speed), transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
-}
-
-.theme-toggle-button:hover {
-    transform: rotate(25deg) scale(1.1); /* Более выраженный поворот и увеличение */
-    filter: brightness(1.1); /* Чуть ярче */
-}
-
-/* Медиа-запросы для адаптивности */
-@media (max-width: 768px) {
-    .container {
-        padding: 1.5rem;
-        border-radius: 20px;
-    }
-    .main-title {
-        font-size: 2.2rem;
-        gap: 10px;
-    }
-    .main-title-icon {
-        font-size: 2rem;
-    }
-    .description {
-        font-size: 1rem;
-        margin-bottom: 2rem;
-    }
-    .card-section {
-        padding: 1.2rem;
-        margin-bottom: 2rem;
-        border-radius: 15px;
-    }
-    .section-title {
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
-        gap: 8px;
-    }
-    .section-icon {
-        font-size: 1.2rem;
-    }
-    .custom-file-input,
-    .action-button {
-        padding: 15px 20px;
-        font-size: 1.1rem;
-        gap: 8px;
-    }
-    .record-controls {
-        flex-direction: column;
-        gap: 15px;
-    }
-    .record-button {
-        width: 100%;
-        min-width: unset;
-    }
-    .or-separator {
-        margin: 2rem 0;
-        font-size: 1.1rem;
-    }
-    .message-box {
-        padding: 1.5rem;
-        margin-top: 2rem;
-        min-height: 70px;
-        border-radius: 15px;
-    }
-    .message-box strong {
-        font-size: 1.1rem;
-    }
-    .recording-indicator {
-        font-size: 1.1rem;
-    }
-    .pulse-circle {
-        width: 16px;
-        height: 16px;
-    }
-    .theme-toggle-container {
-        top: 20px;
-        right: 20px;
-    }
-    .theme-toggle-button {
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
-    }
+@media (max-width: 600px) {
+    .glass-card { padding: 25px; }
+    .controls-row { grid-template-columns: 1fr; }
 }
