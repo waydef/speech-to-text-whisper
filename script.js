@@ -245,8 +245,10 @@ processBtn.addEventListener('click', async () => {
 
         const deleteAction = sessionCard.querySelector('.delete-action');
         deleteAction.addEventListener('click', () => {
-            sessionCard.style.animation = 'fadeIn 0.3s ease reverse forwards';
-            setTimeout(() => sessionCard.remove(), 300);
+            sessionCard.style.animation = 'fadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => {
+                sessionCard.remove();
+            }, 500);
         });
 
         sessionsContainer.prepend(sessionCard);
