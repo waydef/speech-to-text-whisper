@@ -28,20 +28,32 @@
             <div class="controls-row">
                 <div class="control-group">
                     <label>language</label>
-                    <select id="language-select">
-                        <option value="russian">russian</option>
-                        <option value="english">english</option>
-                        <option value="auto">auto detect</option>
-                    </select>
+                    <div class="select-wrapper">
+                        <select id="language-select">
+                            <option value="english">english</option>
+                            <option value="russian">russian</option>
+                            <option value="spanish">spanish</option>
+                            <option value="french">french</option>
+                            <option value="german">german</option>
+                            <option value="chinese">chinese</option>
+                            <option value="japanese">japanese</option>
+                            <option value="korean">korean</option>
+                            <option value="portuguese">portuguese</option>
+                            <option value="italian">italian</option>
+                            <option value="auto">auto detect</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="control-group">
                     <label>model quality</label>
-                    <select id="model-select">
-                        <option value="Xenova/whisper-tiny" data-color="#5fa8ff">tiny (~40mb)</option>
-                        <option value="Xenova/whisper-base" selected data-color="#5fff87">base (~75mb)</option>
-                        <option value="Xenova/whisper-small" data-color="#ffdd5f">small (~250mb)</option>
-                        <option value="Xenova/whisper-medium" data-color="#ff5f5f">medium (~750mb)</option>
-                    </select>
+                    <div class="select-wrapper" id="model-select-wrapper">
+                        <select id="model-select">
+                            <option value="Xenova/whisper-tiny" data-color="#5fa8ff">tiny (~40mb)</option>
+                            <option value="Xenova/whisper-base" selected data-color="#5fff87">base (~75mb)</option>
+                            <option value="Xenova/whisper-small" data-color="#ffdd5f">small (~250mb)</option>
+                            <option value="Xenova/whisper-medium" data-color="#ff5f5f">medium (~750mb)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
