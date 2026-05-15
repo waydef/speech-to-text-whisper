@@ -110,7 +110,6 @@ async function initModel() {
         processBtn.disabled = true;
         setBtnText(processBtnText, processBtn.querySelector('i'), 'loading...', 'fa-spinner fa-spin');
         updateStatus('loading model...', 'info-circle');
-        progressBarBg.style.display = 'block';
         progressBar.style.width = '30%';
         
         recognizer = await pipeline('automatic-speech-recognition', selectedModel);
@@ -119,7 +118,6 @@ async function initModel() {
         progressBar.style.width = '100%';
         updateStatus('model ready', 'check-circle');
         setTimeout(() => {
-            progressBarBg.style.display = 'none';
             progressBar.style.width = '0%';
         }, 1000);
         
@@ -194,7 +192,6 @@ processBtn.addEventListener('click', async () => {
     isProcessing = true;
     processBtn.disabled = true;
     recordBtn.disabled = true;
-    progressBarBg.style.display = 'block';
 
     try {
         while (fileQueue.length > 0) {
@@ -254,21 +251,15 @@ processBtn.addEventListener('click', async () => {
         processBtn.disabled = false;
         recordBtn.disabled = false;
         
-        // NUCLEAR RESET
-        resetRecordBtn();
+        // RESET BUTTON STATE
+        recordBtn.removeAttribute('data-state');
+        setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
         
         setTimeout(() => {
-            progressBarBg.style.display = 'none';
             progressBar.style.width = '0%';
         }, 1000);
     }
 });
-
-function resetRecordBtn() {
-    recordBtn.className = 'btn-secondary';
-    recordBtn.style.cssText = ''; 
-    setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
-}
 
 function setupSessionCardEvents(card, text, id) {
     const copyAction = card.querySelector('.copy-action');
@@ -323,7 +314,7 @@ recordBtn.addEventListener('click', async () => {
 
             mediaRecorder.start();
             isRecording = true;
-            recordBtn.classList.add('recording');
+            recordBtn.setAttribute('data-state', 'recording');
             setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop');
             updateStatus('recording audio...', 'microphone');
         } catch (err) {
@@ -334,16 +325,12 @@ recordBtn.addEventListener('click', async () => {
         mediaRecorder.stop();
         isRecording = false;
         
-        // NUCLEAR RESET TO ANALYZING
-        recordBtn.className = 'btn-secondary btn-processing';
-        recordBtn.style.color = 'var(--accent)';
-        recordBtn.style.borderColor = 'var(--card-border)';
-        recordBtn.style.background = 'transparent';
-        
         if (autoTranscribeCb.checked) {
+            recordBtn.setAttribute('data-state', 'processing');
             setBtnText(recordBtnText, recordBtnIcon, 'analyzing...', 'fa-spinner fa-spin');
         } else {
-            resetRecordBtn();
+            recordBtn.removeAttribute('data-state');
+            setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
         }
         updateStatus('recording finished', 'check');
     }
