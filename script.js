@@ -9,9 +9,8 @@ const statusText = document.getElementById('status-text');
 const progressBarBg = document.getElementById('progress-bar-bg');
 const progressBar = document.getElementById('progress-bar');
 const sessionsContainer = document.getElementById('sessions-container');
-const languageSelect = document.getElementById('language-select');
-const modelSelectWrapper = document.getElementById('model-select-wrapper');
-const modelSelect = document.getElementById('model-select');
+const themeToggle = document.getElementById('theme-toggle');
+const autoTranscribeCb = document.getElementById('auto-transcribe-cb');
 
 const recordBtn = document.getElementById('record-btn');
 
@@ -39,26 +38,83 @@ function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
     }, 300);
 }
 
-// Update model select color immediately
-function updateSelectColor() {
-    const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-    modelSelectWrapper.style.setProperty('--select-color', selectedOption.dataset.color);
+// Theme Toggle
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-theme');
+    const icon = themeToggle.querySelector('i');
+    if (document.body.classList.contains('light-theme')) {
+        icon.className = 'fas fa-sun';
+    } else {
+        icon.className = 'fas fa-moon';
+    }
+});
+
+// Setup Custom Selects
+function setupCustomSelect(containerId, onChangeCallback) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const trigger = container.querySelector('.custom-select-trigger');
+    const options = container.querySelectorAll('.custom-select-option');
+    const textSpan = container.querySelector('.custom-select-text');
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = container.classList.contains('open');
+        document.querySelectorAll('.custom-select-container').forEach(c => c.classList.remove('open'));
+        if (!isOpen) container.classList.add('open');
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', () => {
+            options.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            textSpan.innerHTML = opt.innerHTML;
+            container.classList.remove('open');
+            if (onChangeCallback) onChangeCallback(opt.dataset.value, opt.dataset.color);
+        });
+    });
+
+    const selectedOpt = container.querySelector('.custom-select-option.selected') || options[0];
+    selectedOpt.classList.add('selected');
+    textSpan.innerHTML = selectedOpt.innerHTML;
+    
+    return {
+        getValue: () => container.querySelector('.custom-select-option.selected').dataset.value,
+        setValue: (val) => {
+            const match = Array.from(options).find(o => o.dataset.value === val);
+            if (match) match.click();
+        }
+    };
 }
-modelSelect.addEventListener('change', () => {
-    updateSelectColor();
-    // Revert button if model changed
-    if (recognizer && currentModel !== modelSelect.value) {
+
+let currentLang = 'english';
+const langSelectObj = setupCustomSelect('lang-custom-select', (val) => currentLang = val);
+
+let currentModelVal = 'Xenova/whisper-base';
+const modelSelectObj = setupCustomSelect('model-custom-select', (val, color) => {
+    currentModelVal = val;
+    document.getElementById('model-custom-select').style.setProperty('--select-color', color);
+    
+    if (recognizer && currentModel !== currentModelVal) {
         setBtnText(processBtnText, processBtn.querySelector('i'), 'load model', 'fa-download');
         processBtn.disabled = false;
     }
 });
-updateSelectColor();
+
+// Set initial color
+const initialSelected = document.querySelector('#model-custom-select .custom-select-option.selected');
+if (initialSelected && initialSelected.dataset.color) {
+    document.getElementById('model-custom-select').style.setProperty('--select-color', initialSelected.dataset.color);
+}
+
+// Close custom selects on outside click
+document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-select-container').forEach(c => c.classList.remove('open'));
+});
 
 // Initialize model
 async function initModel() {
-    const selectedModel = modelSelect.value;
-    const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-    modelSelectWrapper.style.setProperty('--select-color', selectedOption.dataset.color);
+    const selectedModel = currentModelVal;
 
     if (recognizer && currentModel === selectedModel) return;
 
@@ -120,14 +176,14 @@ audioInput.addEventListener('change', (e) => {
 function handleFile(file) {
     currentFile = file;
     fileInfo.textContent = `selected: ${file.name}`;
-    if (recognizer && currentModel === modelSelect.value) {
+    if (recognizer && currentModel === currentModelVal) {
         processBtn.disabled = false;
     }
 }
 
 // Processing
 processBtn.addEventListener('click', async () => {
-    if (!recognizer || currentModel !== modelSelect.value) {
+    if (!recognizer || currentModel !== currentModelVal) {
         await initModel();
         return;
     }
@@ -142,7 +198,7 @@ processBtn.addEventListener('click', async () => {
         
         const audioUrl = URL.createObjectURL(currentFile);
         
-        const lang = languageSelect.value;
+        const lang = currentLang;
         const options = {
             chunk_length_s: 30,
             stride_length_s: 5,
@@ -165,6 +221,7 @@ processBtn.addEventListener('click', async () => {
                 <div class="action-links">
                     <span class="action-link copy-action"><i class="far fa-copy"></i> copy</span>
                     <span class="action-link save-action"><i class="fas fa-download"></i> save</span>
+                    <span class="action-link delete-action"><i class="fas fa-trash"></i> delete</span>
                 </div>
             </div>
             <div class="session-text">${output.text}</div>
@@ -187,6 +244,12 @@ processBtn.addEventListener('click', async () => {
             a.download = `transcription_${sessionId}.txt`;
             a.click();
             URL.revokeObjectURL(url);
+        });
+
+        const deleteAction = sessionCard.querySelector('.delete-action');
+        deleteAction.addEventListener('click', () => {
+            sessionCard.style.animation = 'fadeIn 0.3s ease reverse forwards';
+            setTimeout(() => sessionCard.remove(), 300);
         });
 
         sessionsContainer.prepend(sessionCard);
@@ -220,6 +283,10 @@ recordBtn.addEventListener('click', async () => {
                 if (currentStream) {
                     currentStream.getTracks().forEach(track => track.stop());
                     currentStream = null;
+                }
+
+                if (autoTranscribeCb.checked && currentFile) {
+                    processBtn.click();
                 }
             };
 
@@ -265,10 +332,5 @@ const langMap = {
 
 if (langMap[baseLang]) {
     const langVal = langMap[baseLang];
-    for (let i = 0; i < languageSelect.options.length; i++) {
-        if (languageSelect.options[i].value === langVal) {
-            languageSelect.selectedIndex = i;
-            break;
-        }
-    }
+    if (langSelectObj) langSelectObj.setValue(langVal);
 }

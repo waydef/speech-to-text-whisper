@@ -13,7 +13,12 @@
 <body>
 
     <div class="container">
-        <h1 class="main-title">whisper.local</h1>
+        <div class="top-header">
+            <h1 class="main-title">whisper.local</h1>
+            <button id="theme-toggle" class="theme-toggle" title="toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
         <p class="description">private browser-based speech-to-text</p>
 
         <div class="glass-card">
@@ -28,33 +33,49 @@
             <div class="controls-row">
                 <div class="control-group">
                     <label>language</label>
-                    <div class="select-wrapper">
-                        <select id="language-select">
-                            <option value="english">english</option>
-                            <option value="russian">russian</option>
-                            <option value="spanish">spanish</option>
-                            <option value="french">french</option>
-                            <option value="german">german</option>
-                            <option value="chinese">chinese</option>
-                            <option value="japanese">japanese</option>
-                            <option value="korean">korean</option>
-                            <option value="portuguese">portuguese</option>
-                            <option value="italian">italian</option>
-                            <option value="auto">auto detect</option>
-                        </select>
+                    <div class="custom-select-container" id="lang-custom-select">
+                        <div class="custom-select-trigger">
+                            <span class="custom-select-text">english</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-select-option" data-value="english">english</div>
+                            <div class="custom-select-option" data-value="russian">russian</div>
+                            <div class="custom-select-option" data-value="spanish">spanish</div>
+                            <div class="custom-select-option" data-value="french">french</div>
+                            <div class="custom-select-option" data-value="german">german</div>
+                            <div class="custom-select-option" data-value="chinese">chinese</div>
+                            <div class="custom-select-option" data-value="japanese">japanese</div>
+                            <div class="custom-select-option" data-value="korean">korean</div>
+                            <div class="custom-select-option" data-value="portuguese">portuguese</div>
+                            <div class="custom-select-option" data-value="italian">italian</div>
+                            <div class="custom-select-option" data-value="auto">auto detect</div>
+                        </div>
                     </div>
                 </div>
                 <div class="control-group">
                     <label>model quality</label>
-                    <div class="select-wrapper" id="model-select-wrapper">
-                        <select id="model-select">
-                            <option value="Xenova/whisper-tiny" data-color="#5fa8ff">tiny (~40mb)</option>
-                            <option value="Xenova/whisper-base" selected data-color="#5fff87">base (~75mb)</option>
-                            <option value="Xenova/whisper-small" data-color="#ffdd5f">small (~250mb)</option>
-                            <option value="Xenova/whisper-medium" data-color="#ff5f5f">medium (~750mb)</option>
-                        </select>
+                    <div class="custom-select-container" id="model-custom-select">
+                        <div class="custom-select-trigger">
+                            <span class="custom-select-text"><span class="model-badge" style="background: #5fff87"></span>base (~75mb)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-select-option" data-value="Xenova/whisper-tiny" data-color="#5fa8ff"><span class="model-badge" style="background: #5fa8ff"></span>tiny (~40mb)</div>
+                            <div class="custom-select-option selected" data-value="Xenova/whisper-base" data-color="#5fff87"><span class="model-badge" style="background: #5fff87"></span>base (~75mb)</div>
+                            <div class="custom-select-option" data-value="Xenova/whisper-small" data-color="#ffdd5f"><span class="model-badge" style="background: #ffdd5f"></span>small (~250mb)</div>
+                            <div class="custom-select-option" data-value="Xenova/whisper-medium" data-color="#ff5f5f"><span class="model-badge" style="background: #ff5f5f"></span>medium (~750mb)</div>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="options-row">
+                <label class="toggle-checkbox">
+                    <input type="checkbox" id="auto-transcribe-cb" checked>
+                    <span class="checkmark"></span>
+                    <span class="toggle-label">auto-transcribe</span>
+                </label>
             </div>
 
             <div class="action-buttons">

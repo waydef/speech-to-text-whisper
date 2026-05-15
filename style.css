@@ -45,14 +45,38 @@ body::before {
     z-index: 1;
 }
 
+.top-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.theme-toggle {
+    position: absolute;
+    right: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 10px;
+}
+
+.theme-toggle:hover {
+    color: var(--text);
+    transform: scale(1.1);
+}
+
 .main-title {
     font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 800;
     text-transform: lowercase;
     letter-spacing: -0.04em;
-    margin-bottom: 10px;
     text-align: center;
-    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+    background: linear-gradient(180deg, var(--text) 0%, var(--text-dim) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -126,47 +150,143 @@ body::before {
     padding-left: 5px;
 }
 
-.select-wrapper {
+/* Custom Select Container */
+.custom-select-container {
     position: relative;
+    width: 100%;
+    user-select: none;
+    border-radius: 12px;
+    background: var(--bg);
     border: 2px solid var(--select-color, var(--card-border));
     box-shadow: 0 0 10px var(--select-color, transparent);
-    border-radius: 8px;
-    background: #111;
     transition: 0.3s;
 }
 
-.select-wrapper:focus-within {
+.custom-select-container.open {
     border-color: var(--accent);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    z-index: 100;
 }
 
-select {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: #fff;
-    padding: 12px;
-    font-family: inherit;
+.custom-select-trigger {
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
+    font-weight: 500;
 }
 
-/* Custom arrow for select */
-.select-wrapper::after {
-    content: '\f0d7';
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
+.custom-select-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-select-trigger i {
     color: var(--text-dim);
+    transition: 0.3s;
 }
 
-select option {
-    color: #fff; /* Keep dropdown options white */
+.custom-select-container.open .custom-select-trigger i {
+    transform: rotate(180deg);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: -2px;
+    right: -2px;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    border-top: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    overflow: hidden;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.custom-select-container.open .custom-select-options {
+    display: block;
+}
+
+.custom-select-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-select-option:hover {
+    background: var(--card-border);
+}
+
+.custom-select-option.selected {
+    background: var(--card-bg);
+    color: var(--accent);
+}
+
+.model-badge {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Checkbox Toggle */
+.options-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.toggle-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    user-select: none;
+}
+
+.toggle-checkbox input {
+    display: none;
+}
+
+.checkmark {
+    width: 36px;
+    height: 20px;
+    background: var(--card-border);
+    border-radius: 20px;
+    position: relative;
+    transition: 0.3s;
+}
+
+.checkmark::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: var(--text);
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-checkbox input:checked ~ .checkmark {
+    background: var(--accent);
+}
+
+.toggle-checkbox input:checked ~ .checkmark::after {
+    left: 18px;
+    background: #000;
 }
 
 /* Buttons */
@@ -340,12 +460,35 @@ select option {
 }
 
 /* Custom Scrollbar */
-.session-text::-webkit-scrollbar {
+.session-text::-webkit-scrollbar,
+.custom-select-options::-webkit-scrollbar {
     width: 6px;
 }
-.session-text::-webkit-scrollbar-thumb {
+.session-text::-webkit-scrollbar-thumb,
+.custom-select-options::-webkit-scrollbar-thumb {
     background: var(--card-border);
     border-radius: 3px;
+}
+
+/* Light Theme Variables */
+body.light-theme {
+    --bg: #f0f2f5;
+    --card-bg: rgba(255, 255, 255, 0.7);
+    --card-border: rgba(0, 0, 0, 0.1);
+    --accent: #4a9f6d;
+    --accent-glow: rgba(74, 159, 109, 0.3);
+    --text: #1a1a1a;
+    --text-dim: #666;
+}
+
+body.light-theme .session-card {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+body.light-theme .main-title {
+    background: linear-gradient(180deg, #111 0%, #666 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
 }
 
 @media (max-width: 600px) {
