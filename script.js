@@ -27,15 +27,10 @@ const recordBtnText = recordBtn.querySelector('.btn-text');
 const recordBtnIcon = recordBtn.querySelector('i');
 
 function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
-    btnTextEl.style.opacity = '0';
-    if (btnIconEl) btnIconEl.style.opacity = '0';
-    setTimeout(() => {
-        btnTextEl.textContent = text;
-        if (btnIconEl && iconClass) btnIconEl.className = `fas ${iconClass}`;
-        btnTextEl.style.opacity = '1';
-        if (btnIconEl) btnIconEl.style.opacity = '1';
-        if (callback) callback();
-    }, 300);
+    // Immediate change for better UX, or use CSS transitions for smooth swap
+    btnTextEl.textContent = text;
+    if (btnIconEl && iconClass) btnIconEl.className = `fas ${iconClass}`;
+    if (callback) callback();
 }
 
 // Theme Toggle
@@ -185,6 +180,7 @@ function handleFile(file) {
 processBtn.addEventListener('click', async () => {
     if (!recognizer || currentModel !== currentModelVal) {
         await initModel();
+        if (currentFile) processBtn.click(); // Re-trigger to start transcription after loading
         return;
     }
 
@@ -262,6 +258,7 @@ processBtn.addEventListener('click', async () => {
     } finally {
         processBtn.disabled = false;
         recordBtn.disabled = false;
+        setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
     }
 });
 
@@ -269,8 +266,9 @@ processBtn.addEventListener('click', async () => {
 recordBtn.addEventListener('click', async () => {
     if (!isRecording) {
         try {
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
             currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(currentStream);
+            mediaRecorder = new MediaRecorder(currentStream, { mimeType });
             audioChunks = [];
 
             mediaRecorder.ondataavailable = e => {
@@ -304,13 +302,14 @@ recordBtn.addEventListener('click', async () => {
         }
     } else {
         mediaRecorder.stop();
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-            currentStream = null;
-        }
         isRecording = false;
         recordBtn.classList.remove('recording');
-        setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone');
+        
+        if (autoTranscribeCb.checked) {
+            setBtnText(recordBtnText, recordBtnIcon, 'processing...', 'fa-spinner fa-spin');
+        } else {
+            setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
+        }
         updateStatus('recording finished', 'check');
     }
 });
