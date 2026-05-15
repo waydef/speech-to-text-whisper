@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>whisper // local studio</title>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -17,12 +17,12 @@
         <p class="description">private browser-based speech-to-text</p>
 
         <div class="glass-card">
-            <button id="theme-toggle" class="theme-toggle" title="toggle theme">
-                <i class="fas fa-moon"></i>
+            <button id="theme-toggle" class="theme-toggle-btn" title="toggle theme">
+                <i class="fas fa-circle-half-stroke"></i>
             </button>
             <!-- Drop Zone -->
             <div id="drop-zone" class="drop-zone">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <i class="fas fa-wave-square"></i>
                 <p id="file-info">drag & drop audio file here or click to browse</p>
                 <input type="file" id="audio-input" accept="audio/*" style="display: none;">
             </div>
@@ -71,10 +71,10 @@
             <div class="action-buttons-wrapper">
                 <div class="action-buttons">
                     <button id="record-btn" class="btn-secondary">
-                        <i class="fas fa-microphone"></i> <span class="btn-text">record voice</span>
+                        <i class="fas fa-microphone-lines"></i> <span class="btn-text">record voice</span>
                     </button>
                     <button id="process-btn" class="btn-primary">
-                        <i class="fas fa-download"></i> <span class="btn-text">load model</span>
+                        <i class="fas fa-brain"></i> <span class="btn-text">load model</span>
                     </button>
                 </div>
                 
@@ -104,6 +104,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=3"></script>
+    <script type="module" src="script.js?v=4"></script>
 </body>
 </html>
