@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whisper // Local Studio</title>
+    <title>whisper // local studio</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,42 +20,43 @@
             <!-- Drop Zone -->
             <div id="drop-zone" class="drop-zone">
                 <i class="fas fa-cloud-upload-alt"></i>
-                <p id="file-info">Drag & Drop audio file here or click to browse</p>
+                <p id="file-info">drag & drop audio file here or click to browse</p>
                 <input type="file" id="audio-input" accept="audio/*" style="display: none;">
             </div>
 
             <!-- Controls -->
             <div class="controls-row">
                 <div class="control-group">
-                    <label>Language</label>
+                    <label>language</label>
                     <select id="language-select">
-                        <option value="russian">Russian</option>
-                        <option value="english">English</option>
-                        <option value="auto">Auto Detect</option>
+                        <option value="russian">russian</option>
+                        <option value="english">english</option>
+                        <option value="auto">auto detect</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>Model Quality</label>
+                    <label>model quality</label>
                     <select id="model-select">
-                        <option value="Xenova/whisper-tiny">Tiny (Fast)</option>
-                        <option value="Xenova/whisper-base" selected>Base (Better)</option>
+                        <option value="Xenova/whisper-tiny">tiny (~40mb)</option>
+                        <option value="Xenova/whisper-base" selected>base (~75mb)</option>
+                        <option value="Xenova/whisper-small">small (~250mb)</option>
                     </select>
                 </div>
             </div>
 
             <div class="action-buttons">
                 <button id="record-btn" class="btn-secondary">
-                    <i class="fas fa-microphone"></i> Record Voice
+                    <i class="fas fa-microphone"></i> record voice
                 </button>
                 <button id="process-btn" class="btn-primary" disabled>
-                    <i class="fas fa-magic"></i> Transcribe
+                    <i class="fas fa-magic"></i> transcribe
                 </button>
             </div>
 
             <!-- Status -->
             <div class="status-container">
                 <div id="status-text" class="status-text">
-                    <i class="fas fa-info-circle"></i> Ready
+                    <i class="fas fa-info-circle"></i> ready
                 </div>
                 <div id="progress-bar-bg" class="progress-bar-bg">
                     <div id="progress-bar" class="progress-bar"></div>
@@ -65,10 +66,10 @@
             <!-- Result -->
             <div id="result-container" class="result-container">
                 <div class="result-header">
-                    <h3>Transcription Result</h3>
+                    <h3>transcription result</h3>
                     <div class="action-links">
-                        <span id="copy-btn" class="action-link"><i class="far fa-copy"></i> Copy</span>
-                        <span id="download-btn" class="action-link"><i class="fas fa-download"></i> Save</span>
+                        <span id="copy-btn" class="action-link"><i class="far fa-copy"></i> copy</span>
+                        <span id="download-btn" class="action-link"><i class="fas fa-download"></i> save</span>
                     </div>
                 </div>
                 <div id="result-text" class="result-text"></div>

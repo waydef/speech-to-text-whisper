@@ -82,7 +82,7 @@ audioInput.addEventListener('change', (e) => {
 
 function handleFile(file) {
     currentFile = file;
-    fileInfo.textContent = `Selected: ${file.name}`;
+    fileInfo.textContent = `selected: ${file.name}`;
     if (recognizer) processBtn.disabled = false;
     resultContainer.style.display = 'none';
 }
@@ -150,17 +150,17 @@ recordBtn.addEventListener('click', async () => {
             mediaRecorder.start();
             isRecording = true;
             recordBtn.classList.add('recording');
-            recordBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Recording';
+            recordBtn.innerHTML = '<i class="fas fa-stop"></i> stop recording';
             updateStatus('recording audio...', 'microphone');
         } catch (err) {
             console.error('Error accessing microphone:', err);
-            alert('Microphone access denied or not available.');
+            alert('microphone access denied or not available.');
         }
     } else {
         mediaRecorder.stop();
         isRecording = false;
         recordBtn.classList.remove('recording');
-        recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record Voice';
+        recordBtn.innerHTML = '<i class="fas fa-microphone"></i> record voice';
         updateStatus('recording finished', 'check');
     }
 });
@@ -169,7 +169,7 @@ recordBtn.addEventListener('click', async () => {
 copyBtn.addEventListener('click', () => {
     navigator.clipboard.writeText(resultText.textContent);
     const originalText = copyBtn.innerHTML;
-    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> copied';
     setTimeout(() => copyBtn.innerHTML = originalText, 2000);
 });
 
