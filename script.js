@@ -1,74 +1,144 @@
-// Получаем ссылки на элементы DOM
-const fileInput = document.getElementById('audio-file-input');
-const transcribeButton = document.getElementById('transcribe-button');
-const statusElement = document.getElementById('status');
-const resultTextElement = document.getElementById('result-text');
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-let recognizer; // Переменная для хранения экземпляра распознавателя
+// DOM Elements
+const dropZone = document.getElementById('drop-zone');
+const audioInput = document.getElementById('audio-input');
+const fileInfo = document.getElementById('file-info');
+const processBtn = document.getElementById('process-btn');
+const statusText = document.getElementById('status-text');
+const progressBarBg = document.getElementById('progress-bar-bg');
+const progressBar = document.getElementById('progress-bar');
+const resultContainer = document.getElementById('result-container');
+const resultText = document.getElementById('result-text');
+const copyBtn = document.getElementById('copy-btn');
+const downloadBtn = document.getElementById('download-btn');
+const languageSelect = document.getElementById('language-select');
+const modelSelect = document.getElementById('model-select');
 
-// Функция для обновления статуса на странице
-function updateStatus(text) {
-    statusElement.textContent = text;
-    console.log(text);
-}
+let recognizer = null;
+let currentFile = null;
+let currentModel = null;
 
-// Инициализация модели при загрузке страницы
-async function initializeRecognizer() {
-    try {
-        updateStatus('Загрузка модели... (может занять несколько минут при первом запуске)');
-        // Используем модель 'Xenova/whisper-base' для хорошего баланса качества и скорости.
-        // Для максимальной скорости можно использовать 'Xenova/whisper-tiny'.
-        // Здесь используется объект 'Transformers', который должен быть загружен в index.html
-        recognizer = await Transformers.pipeline('automatic-speech-recognition', 'Xenova/whisper-base');
-        updateStatus('Модель загружена. Выберите аудиофайл.');
-        transcribeButton.disabled = false; // Активируем кнопку после загрузки
-    } catch (error) {
-        updateStatus('Ошибка при загрузке модели.');
-        console.error("Ошибка при инициализации распознавателя:", error); // Более подробное логирование
-    }
-}
-
-// Функция для распознавания речи из файла
-async function transcribeAudio() {
-    if (!fileInput.files.length) {
-        updateStatus('Ошибка: файл не выбран.');
-        return;
-    }
-    if (!recognizer) {
-        updateStatus('Ошибка: распознаватель не инициализирован.');
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const audioUrl = URL.createObjectURL(file); // Создаем URL для файла
+// Initialize model
+async function initModel() {
+    const selectedModel = modelSelect.value;
+    if (recognizer && currentModel === selectedModel) return;
 
     try {
-        transcribeButton.disabled = true;
-        resultTextElement.textContent = ''; // Очищаем предыдущий результат
-        updateStatus(`Обработка файла: ${file.name}...`);
+        updateStatus('loading model...', 'info');
+        progressBarBg.style.display = 'block';
+        progressBar.style.width = '30%';
         
-        // Запускаем распознавание
-        const output = await recognizer(audioUrl, {
-            chunk_length_s: 30, // Делим аудио на 30-секундные отрезки
-            stride_length_s: 5, // С перекрытием в 5 секунд для точности
-            language: 'russian', // Указываем язык (можно убрать для автоопределения)
-            task: 'transcribe',
-        });
-
-        updateStatus('Обработка завершена.');
-        resultTextElement.textContent = output.text;
-    } catch (error) {
-        updateStatus('Произошла ошибка во время распознавания.');
-        console.error("Ошибка при транскрипции:", error); // Более подробное логирование
-    } finally {
-        transcribeButton.disabled = false;
-        URL.revokeObjectURL(audioUrl); // Освобождаем память
+        recognizer = await pipeline('automatic-speech-recognition', selectedModel);
+        currentModel = selectedModel;
+        
+        progressBar.style.width = '100%';
+        updateStatus('model ready', 'check');
+        setTimeout(() => {
+            if (!currentFile) progressBarBg.style.display = 'none';
+        }, 1000);
+        
+        if (currentFile) processBtn.disabled = false;
+    } catch (err) {
+        updateStatus('error loading model', 'exclamation-triangle');
+        console.error(err);
     }
 }
 
-// Привязываем события
-transcribeButton.addEventListener('click', transcribeAudio);
-transcribeButton.disabled = true; // Кнопка неактивна до загрузки модели
+function updateStatus(msg, icon) {
+    statusText.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
+}
 
-// Начинаем загрузку модели сразу после загрузки скрипта
-initializeRecognizer();
+// Drag & Drop Logic
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('audio/')) {
+        handleFile(file);
+    }
+});
+
+dropZone.addEventListener('click', () => audioInput.click());
+
+audioInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+});
+
+function handleFile(file) {
+    currentFile = file;
+    fileInfo.textContent = `Selected: ${file.name}`;
+    if (recognizer) processBtn.disabled = false;
+    resultContainer.style.display = 'none';
+}
+
+// Processing
+processBtn.addEventListener('click', async () => {
+    if (!currentFile || !recognizer) return;
+
+    try {
+        processBtn.disabled = true;
+        progressBarBg.style.display = 'block';
+        progressBar.style.width = '10%';
+        updateStatus('transcribing...', 'spinner fa-spin');
+        
+        const audioUrl = URL.createObjectURL(currentFile);
+        
+        const lang = languageSelect.value;
+        const options = {
+            chunk_length_s: 30,
+            stride_length_s: 5,
+            task: 'transcribe',
+        };
+        
+        if (lang !== 'auto') options.language = lang;
+
+        const output = await recognizer(audioUrl, options);
+        
+        progressBar.style.width = '100%';
+        updateStatus('done', 'check-circle');
+        
+        resultText.textContent = output.text;
+        resultContainer.style.display = 'block';
+        
+        URL.revokeObjectURL(audioUrl);
+    } catch (err) {
+        updateStatus('transcription failed', 'times-circle');
+        console.error(err);
+    } finally {
+        processBtn.disabled = false;
+    }
+});
+
+// Utilities
+copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(resultText.textContent);
+    const originalText = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+    setTimeout(() => copyBtn.innerHTML = originalText, 2000);
+});
+
+downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([resultText.textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transcription_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+modelSelect.addEventListener('change', initModel);
+
+// Start init
+initModel();
