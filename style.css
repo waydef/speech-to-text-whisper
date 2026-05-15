@@ -129,7 +129,7 @@ body::before {
 select {
     background: #111;
     border: 1px solid var(--card-border);
-    color: #fff;
+    color: var(--select-color, #fff);
     padding: 12px;
     border-radius: 8px;
     font-family: inherit;
@@ -140,6 +140,10 @@ select {
 
 select:focus {
     border-color: var(--accent);
+}
+
+select option {
+    color: #fff; /* Keep dropdown options white */
 }
 
 /* Buttons */
@@ -248,24 +252,38 @@ select:focus {
     box-shadow: 0 0 10px var(--accent);
 }
 
-/* Result Area */
-.result-container {
+/* Sessions Area */
+.sessions-container {
     margin-top: 30px;
-    display: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.result-header {
+.session-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.session-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
 
-.result-header h3 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-dim);
+.session-header h3 {
+    font-size: 0.7rem;
+    color: var(--accent);
+    text-transform: lowercase;
 }
 
 .action-links {
@@ -275,34 +293,30 @@ select:focus {
 
 .action-link {
     font-size: 0.7rem;
-    color: var(--accent);
+    color: var(--text-dim);
     text-decoration: none;
     cursor: pointer;
-    opacity: 0.7;
     transition: 0.2s;
 }
 
 .action-link:hover {
-    opacity: 1;
+    color: var(--text);
 }
 
-.result-text {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 20px;
+.session-text {
     font-size: 0.95rem;
     line-height: 1.6;
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
     white-space: pre-wrap;
+    color: var(--text);
 }
 
 /* Custom Scrollbar */
-.result-text::-webkit-scrollbar {
+.session-text::-webkit-scrollbar {
     width: 6px;
 }
-.result-text::-webkit-scrollbar-thumb {
+.session-text::-webkit-scrollbar-thumb {
     background: var(--card-border);
     border-radius: 3px;
 }

@@ -8,10 +8,7 @@ const processBtn = document.getElementById('process-btn');
 const statusText = document.getElementById('status-text');
 const progressBarBg = document.getElementById('progress-bar-bg');
 const progressBar = document.getElementById('progress-bar');
-const resultContainer = document.getElementById('result-container');
-const resultText = document.getElementById('result-text');
-const copyBtn = document.getElementById('copy-btn');
-const downloadBtn = document.getElementById('download-btn');
+const sessionsContainer = document.getElementById('sessions-container');
 const languageSelect = document.getElementById('language-select');
 const modelSelect = document.getElementById('model-select');
 
@@ -27,6 +24,9 @@ let isRecording = false;
 // Initialize model
 async function initModel() {
     const selectedModel = modelSelect.value;
+    const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+    modelSelect.style.setProperty('--select-color', selectedOption.dataset.color);
+
     if (recognizer && currentModel === selectedModel) return;
 
     try {
@@ -84,7 +84,6 @@ function handleFile(file) {
     currentFile = file;
     fileInfo.textContent = `selected: ${file.name}`;
     if (recognizer) processBtn.disabled = false;
-    resultContainer.style.display = 'none';
 }
 
 // Processing
@@ -113,8 +112,40 @@ processBtn.addEventListener('click', async () => {
         progressBar.style.width = '100%';
         updateStatus('done', 'check-circle');
         
-        resultText.textContent = output.text;
-        resultContainer.style.display = 'block';
+        const sessionCard = document.createElement('div');
+        sessionCard.className = 'session-card';
+        const sessionId = Date.now();
+        sessionCard.innerHTML = `
+            <div class="session-header">
+                <h3>transcription // ${new Date().toLocaleTimeString()}</h3>
+                <div class="action-links">
+                    <span class="action-link copy-action"><i class="far fa-copy"></i> copy</span>
+                    <span class="action-link save-action"><i class="fas fa-download"></i> save</span>
+                </div>
+            </div>
+            <div class="session-text">${output.text}</div>
+        `;
+        
+        const copyAction = sessionCard.querySelector('.copy-action');
+        copyAction.addEventListener('click', () => {
+            navigator.clipboard.writeText(output.text);
+            const originalText = copyAction.innerHTML;
+            copyAction.innerHTML = '<i class="fas fa-check"></i> copied';
+            setTimeout(() => copyAction.innerHTML = originalText, 2000);
+        });
+
+        const saveAction = sessionCard.querySelector('.save-action');
+        saveAction.addEventListener('click', () => {
+            const blob = new Blob([output.text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = \`transcription_\${sessionId}.txt\`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        sessionsContainer.prepend(sessionCard);
         
         URL.revokeObjectURL(audioUrl);
     } catch (err) {
@@ -163,24 +194,6 @@ recordBtn.addEventListener('click', async () => {
         recordBtn.innerHTML = '<i class="fas fa-microphone"></i> record voice';
         updateStatus('recording finished', 'check');
     }
-});
-
-// Utilities
-copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(resultText.textContent);
-    const originalText = copyBtn.innerHTML;
-    copyBtn.innerHTML = '<i class="fas fa-check"></i> copied';
-    setTimeout(() => copyBtn.innerHTML = originalText, 2000);
-});
-
-downloadBtn.addEventListener('click', () => {
-    const blob = new Blob([resultText.textContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transcription_${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
 });
 
 modelSelect.addEventListener('change', initModel);

@@ -37,9 +37,10 @@
                 <div class="control-group">
                     <label>model quality</label>
                     <select id="model-select">
-                        <option value="Xenova/whisper-tiny">tiny (~40mb)</option>
-                        <option value="Xenova/whisper-base" selected>base (~75mb)</option>
-                        <option value="Xenova/whisper-small">small (~250mb)</option>
+                        <option value="Xenova/whisper-tiny" data-color="#5fa8ff">tiny (~40mb)</option>
+                        <option value="Xenova/whisper-base" selected data-color="#5fff87">base (~75mb)</option>
+                        <option value="Xenova/whisper-small" data-color="#ffdd5f">small (~250mb)</option>
+                        <option value="Xenova/whisper-medium" data-color="#ff5f5f">medium (~750mb)</option>
                     </select>
                 </div>
             </div>
@@ -63,16 +64,9 @@
                 </div>
             </div>
 
-            <!-- Result -->
-            <div id="result-container" class="result-container">
-                <div class="result-header">
-                    <h3>transcription result</h3>
-                    <div class="action-links">
-                        <span id="copy-btn" class="action-link"><i class="far fa-copy"></i> copy</span>
-                        <span id="download-btn" class="action-link"><i class="fas fa-download"></i> save</span>
-                    </div>
-                </div>
-                <div id="result-text" class="result-text"></div>
+            <!-- Sessions -->
+            <div id="sessions-container" class="sessions-container">
+                <!-- Session cards will be appended here -->
             </div>
         </div>
     </div>
