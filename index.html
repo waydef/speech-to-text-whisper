@@ -1,245 +1,76 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Whisper Online: Распознавание речи</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper // AI Transcription</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="dark-theme"> <div class="theme-toggle-container">
-    <button id="theme-toggle" class="icon-button theme-toggle-button" aria-label="Переключить тему">
-      <i class="fas fa-sun"></i> </button>
-  </div>
+<body>
 
-  <div class="container">
-    <h1 class="main-title"><i class="fas fa-ear main-title-icon"></i> Whisper Online</h1>
-    <p class="description">Мгновенное распознавание речи прямо в вашем браузере. Выберите файл или запишите аудио!</p>
+    <div class="container">
+        <h1 class="main-title">whisper.ai</h1>
+        <p class="description">private browser-based speech-to-text</p>
 
-    <div class="card-section upload-section">
-      <h2 class="section-title"><i class="fas fa-file-audio section-icon"></i> Загрузить аудиофайл</h2>
-      <label for="audio-file-input" class="custom-file-input">
-        <i class="fas fa-upload"></i> <span id="file-input-text">Выбрать файл (MP3, WAV, FLAC...)</span>
-      </label>
-      <input type="file" id="audio-file-input" accept="audio/*" class="hidden-file-input">
-      <button id="transcribe-file-button" class="action-button primary-button" disabled>
-        <i class="fas fa-microphone-alt-slash"></i> Распознать загруженный файл
-      </button>
+        <div class="glass-card">
+            <!-- Drop Zone -->
+            <div id="drop-zone" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p id="file-info">Drag & Drop audio file here or click to browse</p>
+                <input type="file" id="audio-input" accept="audio/*" style="display: none;">
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-row">
+                <div class="control-group">
+                    <label>Language</label>
+                    <select id="language-select">
+                        <option value="russian">Russian</option>
+                        <option value="english">English</option>
+                        <option value="auto">Auto Detect</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Model Quality</label>
+                    <select id="model-select">
+                        <option value="Xenova/whisper-tiny">Tiny (Fast)</option>
+                        <option value="Xenova/whisper-base" selected>Base (Better)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="process-btn" class="btn-primary" disabled>
+                <i class="fas fa-magic"></i> Start Transcription
+            </button>
+
+            <!-- Status -->
+            <div class="status-container">
+                <div id="status-text" class="status-text">
+                    <i class="fas fa-info-circle"></i> Ready
+                </div>
+                <div id="progress-bar-bg" class="progress-bar-bg">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="result-container" class="result-container">
+                <div class="result-header">
+                    <h3>Transcription Result</h3>
+                    <div class="action-links">
+                        <span id="copy-btn" class="action-link"><i class="far fa-copy"></i> Copy</span>
+                        <span id="download-btn" class="action-link"><i class="fas fa-download"></i> Save</span>
+                    </div>
+                </div>
+                <div id="result-text" class="result-text"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="or-separator">ИЛИ</div>
-
-    <div class="card-section record-section">
-      <h2 class="section-title"><i class="fas fa-microphone-alt section-icon"></i> Записать речь с микрофона</h2>
-      <div class="record-controls">
-        <button id="record-start-button" class="action-button record-button start-record-btn" disabled>
-          <i class="fas fa-play"></i> Начать запись
-        </button>
-        <button id="record-stop-button" class="action-button record-button stop-record-btn" disabled>
-          <i class="fas fa-stop"></i> Остановить запись
-        </button>
-      </div>
-      <div id="recording-indicator" class="recording-indicator">
-        <div class="pulse-circle"></div>
-        <span class="recording-text">Запись аудио...</span>
-      </div>
-    </div>
-    
-    <div class="status-box message-box">
-        <p><strong><i class="fas fa-info-circle"></i> Статус:</strong> <span id="status">Ожидание загрузки модели...</span></p>
-    </div>
-    
-    <div class="result-box message-box">
-        <h2 class="section-title"><i class="fas fa-comment-dots section-icon"></i> Результат распознавания:</h2>
-        <p id="result-text" class="result-content"></p>
-    </div>
-  </div>
-
-  <script type="module">
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
-
-    // Элементы DOM
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
-    const fileInput = document.getElementById('audio-file-input');
-    const transcribeFileButton = document.getElementById('transcribe-file-button');
-    const recordStartButton = document.getElementById('record-start-button');
-    const recordStopButton = document.getElementById('record-stop-button');
-    const recordingIndicator = document.getElementById('recording-indicator');
-    const statusElement = document.getElementById('status');
-    const resultTextElement = document.getElementById('result-text');
-    const fileInputText = document.getElementById('file-input-text'); // Для обновления текста выбора файла
-
-    let recognizer;
-    let mediaRecorder;
-    let audioChunks = [];
-    let audioBlob;
-
-    // --- Функции UI и темы ---
-    function updateStatus(text) {
-      statusElement.textContent = text;
-      console.log(text);
-    }
-
-    function toggleTheme() {
-      if (body.classList.contains('light-theme')) {
-        body.classList.remove('light-theme');
-        body.classList.add('dark-theme');
-        localStorage.setItem('theme', 'dark');
-        updateThemeIcon('dark');
-      } else {
-        body.classList.remove('dark-theme');
-        body.classList.add('light-theme');
-        localStorage.setItem('theme', 'light');
-        updateThemeIcon('light');
-      }
-    }
-
-    function updateThemeIcon(theme) {
-      if (theme === 'dark') {
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>'; // Солнце для темной темы
-        themeToggle.title = 'Переключиться на светлую тему';
-      } else {
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>'; // Луна для светлой темы
-        themeToggle.title = 'Переключиться на тёмную тему';
-      }
-    }
-
-    // --- Функции распознавания ---
-    async function initializeRecognizer() {
-      try {
-        updateStatus('Загрузка модели... (может занять несколько минут при первом запуске)');
-        // Используем 'whisper-tiny' для быстрой загрузки, можно сменить на 'whisper-base'
-        recognizer = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny'); 
-        updateStatus('Модель загружена. Готово к работе!');
-        transcribeFileButton.disabled = false;
-        recordStartButton.disabled = false;
-      } catch (error) {
-        updateStatus('Ошибка при загрузке модели. Пожалуйста, попробуйте обновить страницу.');
-        console.error('Ошибка при инициализации распознавателя:', error);
-        transcribeFileButton.disabled = true;
-        recordStartButton.disabled = true;
-        recordStopButton.disabled = true;
-      }
-    }
-
-    async function transcribeAudio(audioFileOrBlob) {
-      if (!recognizer) {
-        updateStatus('Ошибка: распознаватель не инициализирован. Перезагрузите страницу.');
-        return;
-      }
-
-      const audioUrl = URL.createObjectURL(audioFileOrBlob);
-
-      try {
-        transcribeFileButton.disabled = true;
-        recordStartButton.disabled = true;
-        recordStopButton.disabled = true;
-        recordingIndicator.style.display = 'none';
-        resultTextElement.textContent = 'Распознавание...';
-        updateStatus(`Обработка аудио...`);
-        
-        const output = await recognizer(audioUrl, {
-            chunk_length_s: 30,
-            stride_length_s: 5,
-            language: 'russian',
-            task: 'transcribe',
-        });
-
-        updateStatus('Обработка завершена.');
-        resultTextElement.textContent = output.text;
-      } catch (error) {
-        updateStatus('Произошла ошибка во время распознавания. Пожалуйста, попробуйте еще раз.');
-        console.error('Ошибка при распознавании:', error);
-        resultTextElement.textContent = 'Ошибка распознавания.';
-      } finally {
-        transcribeFileButton.disabled = fileInput.files.length === 0; // Включаем, если есть файл
-        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-          recordStartButton.disabled = false;
-        }
-        URL.revokeObjectURL(audioUrl);
-      }
-    }
-
-    // --- Функции записи аудио ---
-    async function startRecording() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = event => {
-          audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = async () => {
-          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          updateStatus('Запись завершена. Начинается распознавание...');
-          transcribeAudio(audioBlob);
-          stream.getTracks().forEach(track => track.stop()); // Останавливаем треки микрофона
-        };
-
-        mediaRecorder.start();
-        updateStatus('Запись началась...');
-        recordStartButton.disabled = true;
-        recordStopButton.disabled = false;
-        recordingIndicator.style.display = 'flex';
-        resultTextElement.textContent = '';
-      } catch (error) {
-        updateStatus('Ошибка: нет доступа к микрофону или произошла ошибка записи.');
-        console.error('Ошибка записи аудио:', error);
-        recordStartButton.disabled = false; // Разблокируем кнопку, если ошибка
-        recordStopButton.disabled = true;
-        recordingIndicator.style.display = 'none';
-      }
-    }
-
-    function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        updateStatus('Остановка записи...');
-        recordStopButton.disabled = true;
-        recordingIndicator.style.display = 'none';
-      }
-    }
-
-    // --- Обработчики событий ---
-    themeToggle.addEventListener('click', toggleTheme);
-
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length > 0) {
-        fileInputText.textContent = fileInput.files[0].name; // Обновляем текст лейбла
-        transcribeFileButton.disabled = false; // Активируем кнопку распознавания файла
-      } else {
-        fileInputText.innerHTML = 'Выбрать файл (MP3, WAV, FLAC...)'; // Возвращаем исходный текст
-        transcribeFileButton.disabled = true;
-      }
-    });
-
-    transcribeFileButton.addEventListener('click', () => {
-      if (fileInput.files.length > 0) {
-        transcribeAudio(fileInput.files[0]);
-      } else {
-        updateStatus('Пожалуйста, выберите аудиофайл для распознавания.');
-      }
-    });
-
-    recordStartButton.addEventListener('click', startRecording);
-    recordStopButton.addEventListener('click', stopRecording);
-
-    // --- Инициализация при загрузке страницы ---
-    // Проверяем сохраненную тему. Если сохранена 'light', переключаем на нее. Иначе оставляем 'dark' по умолчанию.
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') { 
-      body.classList.remove('dark-theme'); // Удаляем dark-theme, если light сохранена
-      body.classList.add('light-theme');
-    } else {
-      body.classList.add('dark-theme'); // Убедимся, что dark-theme применена по умолчанию
-    }
-    updateThemeIcon(savedTheme || 'dark'); // Обновить иконку темы при загрузке, по умолчанию 'dark'
-
-    initializeRecognizer();
-  </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
