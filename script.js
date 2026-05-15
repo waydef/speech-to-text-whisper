@@ -15,9 +15,14 @@ const downloadBtn = document.getElementById('download-btn');
 const languageSelect = document.getElementById('language-select');
 const modelSelect = document.getElementById('model-select');
 
+const recordBtn = document.getElementById('record-btn');
+
 let recognizer = null;
 let currentFile = null;
 let currentModel = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 
 // Initialize model
 async function initModel() {
@@ -117,6 +122,46 @@ processBtn.addEventListener('click', async () => {
         console.error(err);
     } finally {
         processBtn.disabled = false;
+    }
+});
+
+// Recording Logic
+recordBtn.addEventListener('click', async () => {
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                // We need to pass it as a file-like object to handleFile
+                const file = new File([audioBlob], "recorded_audio.webm", { type: 'audio/webm' });
+                handleFile(file);
+                
+                // Stop tracks to release mic
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.classList.add('recording');
+            recordBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Recording';
+            updateStatus('recording audio...', 'microphone');
+        } catch (err) {
+            console.error('Error accessing microphone:', err);
+            alert('Microphone access denied or not available.');
+        }
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.classList.remove('recording');
+        recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record Voice';
+        updateStatus('recording finished', 'check');
     }
 });
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whisper // AI Transcription</title>
+    <title>Whisper // Local Studio</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
 <body>
 
     <div class="container">
-        <h1 class="main-title">whisper.ai</h1>
+        <h1 class="main-title">whisper.local</h1>
         <p class="description">private browser-based speech-to-text</p>
 
         <div class="glass-card">
@@ -43,9 +43,14 @@
                 </div>
             </div>
 
-            <button id="process-btn" class="btn-primary" disabled>
-                <i class="fas fa-magic"></i> Start Transcription
-            </button>
+            <div class="action-buttons">
+                <button id="record-btn" class="btn-secondary">
+                    <i class="fas fa-microphone"></i> Record Voice
+                </button>
+                <button id="process-btn" class="btn-primary" disabled>
+                    <i class="fas fa-magic"></i> Transcribe
+                </button>
+            </div>
 
             <!-- Status -->
             <div class="status-container">
