@@ -195,6 +195,7 @@ processBtn.addEventListener('click', async () => {
         progressBarBg.style.display = 'block';
         progressBar.style.width = '10%';
         updateStatus('transcribing...', 'spinner fa-spin');
+        recordBtn.disabled = true;
         
         const audioUrl = URL.createObjectURL(currentFile);
         
@@ -260,6 +261,7 @@ processBtn.addEventListener('click', async () => {
         console.error(err);
     } finally {
         processBtn.disabled = false;
+        recordBtn.disabled = false;
     }
 });
 

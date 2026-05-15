@@ -77,23 +77,29 @@ body::before {
     transition: background 0.5s ease, border-color 0.5s ease;
 }
 
-.theme-toggle {
+.theme-toggle-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    font-size: 1.1rem;
+    top: 25px;
+    right: 25px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--card-border);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 10px;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 10;
 }
 
-.theme-toggle:hover {
-    color: var(--text);
-    transform: rotate(15deg) scale(1.1);
+.theme-toggle-btn:hover {
+    background: var(--accent);
+    color: #000;
+    transform: rotate(45deg) scale(1.1);
+    box-shadow: 0 0 15px var(--accent-glow);
 }
 
 /* Drop Zone */
@@ -161,9 +167,8 @@ body::before {
 
 .custom-select-container.open {
     border-color: var(--accent);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
     z-index: 100;
+    box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .custom-select-trigger {
@@ -201,18 +206,20 @@ body::before {
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0) scale(0.95);
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
     max-height: 250px;
     overflow-y: auto;
     z-index: 100;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    pointer-events: none;
 }
 
 .custom-select-container.open .custom-select-options {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(8px) scale(1);
+    pointer-events: all;
 }
 
 .custom-select-container.open {
@@ -322,30 +329,31 @@ body::before {
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    border-color: var(--error);
-    color: var(--error);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 95, 95, 0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--accent-glow);
 }
 
 .btn-secondary.recording {
-    background: rgba(255, 95, 95, 0.1);
+    background: rgba(255, 95, 95, 0.15);
     border-color: var(--error);
     color: var(--error);
-    animation: soft-pulse 2s infinite;
+    animation: premium-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-@keyframes soft-pulse {
+@keyframes premium-pulse {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 95, 95, 0.4); }
-    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 95, 95, 0); }
+    50% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(255, 95, 95, 0); }
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 95, 95, 0); }
 }
 
