@@ -18,8 +18,40 @@ let recognizer = null;
 let currentFile = null;
 let currentModel = null;
 let mediaRecorder = null;
+let currentStream = null;
 let audioChunks = [];
 let isRecording = false;
+
+const processBtnText = processBtn.querySelector('.btn-text');
+const recordBtnText = recordBtn.querySelector('.btn-text');
+const recordBtnIcon = recordBtn.querySelector('i');
+
+function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
+    btnTextEl.style.opacity = '0';
+    if (btnIconEl) btnIconEl.style.opacity = '0';
+    setTimeout(() => {
+        btnTextEl.textContent = text;
+        if (btnIconEl && iconClass) btnIconEl.className = `fas ${iconClass}`;
+        btnTextEl.style.opacity = '1';
+        if (btnIconEl) btnIconEl.style.opacity = '1';
+        if (callback) callback();
+    }, 300);
+}
+
+// Update model select color immediately
+function updateSelectColor() {
+    const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+    modelSelect.style.setProperty('--select-color', selectedOption.dataset.color);
+}
+modelSelect.addEventListener('change', () => {
+    updateSelectColor();
+    // Revert button if model changed
+    if (recognizer && currentModel !== modelSelect.value) {
+        setBtnText(processBtnText, processBtn.querySelector('i'), 'load model', 'fa-download');
+        processBtn.disabled = false;
+    }
+});
+updateSelectColor();
 
 // Initialize model
 async function initModel() {
@@ -30,6 +62,8 @@ async function initModel() {
     if (recognizer && currentModel === selectedModel) return;
 
     try {
+        processBtn.disabled = true;
+        setBtnText(processBtnText, processBtn.querySelector('i'), 'loading...', 'fa-spinner fa-spin');
         updateStatus('loading model...', 'info');
         progressBarBg.style.display = 'block';
         progressBar.style.width = '30%';
@@ -40,10 +74,12 @@ async function initModel() {
         progressBar.style.width = '100%';
         updateStatus('model ready', 'check');
         setTimeout(() => {
-            if (!currentFile) progressBarBg.style.display = 'none';
+            progressBarBg.style.display = 'none';
         }, 1000);
         
-        if (currentFile) processBtn.disabled = false;
+        setBtnText(processBtnText, processBtn.querySelector('i'), 'transcribe', 'fa-magic', () => {
+            processBtn.disabled = !currentFile;
+        });
     } catch (err) {
         updateStatus('error loading model', 'exclamation-triangle');
         console.error(err);
@@ -83,12 +119,19 @@ audioInput.addEventListener('change', (e) => {
 function handleFile(file) {
     currentFile = file;
     fileInfo.textContent = `selected: ${file.name}`;
-    if (recognizer) processBtn.disabled = false;
+    if (recognizer && currentModel === modelSelect.value) {
+        processBtn.disabled = false;
+    }
 }
 
 // Processing
 processBtn.addEventListener('click', async () => {
-    if (!currentFile || !recognizer) return;
+    if (!recognizer || currentModel !== modelSelect.value) {
+        await initModel();
+        return;
+    }
+
+    if (!currentFile) return;
 
     try {
         processBtn.disabled = true;
@@ -160,8 +203,8 @@ processBtn.addEventListener('click', async () => {
 recordBtn.addEventListener('click', async () => {
     if (!isRecording) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(currentStream);
             audioChunks = [];
 
             mediaRecorder.ondataavailable = e => {
@@ -170,18 +213,20 @@ recordBtn.addEventListener('click', async () => {
 
             mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                // We need to pass it as a file-like object to handleFile
                 const file = new File([audioBlob], "recorded_audio.webm", { type: 'audio/webm' });
                 handleFile(file);
                 
-                // Stop tracks to release mic
-                stream.getTracks().forEach(track => track.stop());
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
             };
 
             mediaRecorder.start();
             isRecording = true;
-            recordBtn.classList.add('recording');
-            recordBtn.innerHTML = '<i class="fas fa-stop"></i> stop recording';
+            setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop', () => {
+                recordBtn.classList.add('recording');
+            });
             updateStatus('recording audio...', 'microphone');
         } catch (err) {
             console.error('Error accessing microphone:', err);
@@ -189,14 +234,14 @@ recordBtn.addEventListener('click', async () => {
         }
     } else {
         mediaRecorder.stop();
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
         isRecording = false;
         recordBtn.classList.remove('recording');
-        recordBtn.innerHTML = '<i class="fas fa-microphone"></i> record voice';
+        setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone');
         updateStatus('recording finished', 'check');
     }
 });
 
-modelSelect.addEventListener('change', initModel);
-
-// Start init
-initModel();
