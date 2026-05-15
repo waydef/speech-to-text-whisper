@@ -15,7 +15,8 @@ const autoTranscribeCb = document.getElementById('auto-transcribe-cb');
 const recordBtn = document.getElementById('record-btn');
 
 let recognizer = null;
-let currentFile = null;
+let fileQueue = [];
+let isProcessing = false;
 let currentModel = null;
 let mediaRecorder = null;
 let currentStream = null;
@@ -27,7 +28,6 @@ const recordBtnText = recordBtn.querySelector('.btn-text');
 const recordBtnIcon = recordBtn.querySelector('i');
 
 function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
-    // Immediate change for better UX, or use CSS transitions for smooth swap
     btnTextEl.textContent = text;
     if (btnIconEl && iconClass) btnIconEl.className = `fas ${iconClass}`;
     if (callback) callback();
@@ -40,7 +40,7 @@ themeToggle.addEventListener('click', () => {
     if (document.body.classList.contains('light-theme')) {
         icon.className = 'fas fa-sun';
     } else {
-        icon.className = 'fas fa-moon';
+        icon.className = 'fas fa-circle-half-stroke';
     }
 });
 
@@ -91,7 +91,7 @@ const modelSelectObj = setupCustomSelect('model-custom-select', (val, color) => 
     document.getElementById('model-custom-select').style.setProperty('--select-color', color);
     
     if (recognizer && currentModel !== currentModelVal) {
-        setBtnText(processBtnText, processBtn.querySelector('i'), 'load model', 'fa-download');
+        setBtnText(processBtnText, processBtn.querySelector('i'), 'load model', 'fa-brain');
         processBtn.disabled = false;
     }
 });
@@ -116,7 +116,7 @@ async function initModel() {
     try {
         processBtn.disabled = true;
         setBtnText(processBtnText, processBtn.querySelector('i'), 'loading...', 'fa-spinner fa-spin');
-        updateStatus('loading model...', 'info');
+        updateStatus('loading model...', 'info-circle');
         progressBarBg.style.display = 'block';
         progressBar.style.width = '30%';
         
@@ -124,13 +124,14 @@ async function initModel() {
         currentModel = selectedModel;
         
         progressBar.style.width = '100%';
-        updateStatus('model ready', 'check');
+        updateStatus('model ready', 'check-circle');
         setTimeout(() => {
             progressBarBg.style.display = 'none';
+            progressBar.style.width = '0%';
         }, 1000);
         
         setBtnText(processBtnText, processBtn.querySelector('i'), 'transcribe', 'fa-magic', () => {
-            processBtn.disabled = !currentFile;
+            processBtn.disabled = fileQueue.length === 0;
         });
     } catch (err) {
         updateStatus('error loading model', 'exclamation-triangle');
@@ -155,24 +156,35 @@ dropZone.addEventListener('dragleave', () => {
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('audio/')) {
-        handleFile(file);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/'));
+    if (files.length > 0) {
+        handleFiles(files);
     }
 });
 
 dropZone.addEventListener('click', () => audioInput.click());
 
 audioInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) handleFile(file);
+    const files = Array.from(e.target.files);
+    if (files.length > 0) handleFiles(files);
 });
 
-function handleFile(file) {
-    currentFile = file;
-    fileInfo.textContent = `selected: ${file.name}`;
+function handleFiles(files, isVoice = false) {
+    files.forEach(file => {
+        file.isVoice = isVoice;
+        fileQueue.push(file);
+    });
+    
+    fileInfo.textContent = fileQueue.length === 1 
+        ? `selected: ${fileQueue[0].name}` 
+        : `${fileQueue.length} files selected`;
+
     if (recognizer && currentModel === currentModelVal) {
         processBtn.disabled = false;
+    }
+
+    if (autoTranscribeCb.checked && !isProcessing) {
+        processBtn.click();
     }
 }
 
@@ -180,90 +192,109 @@ function handleFile(file) {
 processBtn.addEventListener('click', async () => {
     if (!recognizer || currentModel !== currentModelVal) {
         await initModel();
-        if (currentFile) processBtn.click(); // Re-trigger to start transcription after loading
+        if (fileQueue.length > 0) processBtn.click();
         return;
     }
 
-    if (!currentFile) return;
+    if (fileQueue.length === 0 || isProcessing) return;
+
+    isProcessing = true;
+    processBtn.disabled = true;
+    recordBtn.disabled = true;
+    progressBarBg.style.display = 'block';
 
     try {
-        processBtn.disabled = true;
-        progressBarBg.style.display = 'block';
-        progressBar.style.width = '10%';
-        updateStatus('transcribing...', 'spinner fa-spin');
-        recordBtn.disabled = true;
-        
-        const audioUrl = URL.createObjectURL(currentFile);
-        
-        const lang = currentLang;
-        const options = {
-            chunk_length_s: 30,
-            stride_length_s: 5,
-            task: 'transcribe',
-        };
-        
-        if (lang !== 'auto') options.language = lang;
+        while (fileQueue.length > 0) {
+            const file = fileQueue.shift();
+            const fileName = file.isVoice ? 'voice recording' : file.name;
+            
+            updateStatus(`transcribing: ${fileName}`, 'spinner fa-spin');
+            progressBar.style.width = '10%';
 
-        const output = await recognizer(audioUrl, options);
-        
-        progressBar.style.width = '100%';
-        updateStatus('done', 'check-circle');
-        
-        const sessionCard = document.createElement('div');
-        sessionCard.className = 'session-card';
-        const sessionId = Date.now();
-        sessionCard.innerHTML = `
-            <div class="session-header">
-                <h3>transcription // ${new Date().toLocaleTimeString()}</h3>
-                <div class="action-links">
-                    <span class="action-link copy-action"><i class="far fa-copy"></i> copy</span>
-                    <span class="action-link save-action"><i class="fas fa-download"></i> save</span>
-                    <span class="action-link delete-action"><i class="fas fa-trash"></i> delete</span>
+            const audioUrl = URL.createObjectURL(file);
+            const lang = currentLang;
+            const options = {
+                chunk_length_s: 30,
+                stride_length_s: 5,
+                task: 'transcribe',
+            };
+            
+            if (lang !== 'auto') options.language = lang;
+
+            const output = await recognizer(audioUrl, options);
+            
+            progressBar.style.width = '100%';
+            
+            const sessionCard = document.createElement('div');
+            sessionCard.className = 'session-card';
+            const sessionId = Date.now();
+            sessionCard.innerHTML = `
+                <div class="session-header">
+                    <h3>${fileName} // ${new Date().toLocaleTimeString()}</h3>
+                    <div class="action-links">
+                        <span class="action-link copy-action"><i class="far fa-copy"></i> copy</span>
+                        <span class="action-link save-action"><i class="fas fa-download"></i> save</span>
+                        <span class="action-link delete-action"><i class="fas fa-trash"></i> delete</span>
+                    </div>
                 </div>
-            </div>
-            <div class="session-text">${output.text}</div>
-        `;
+                <div class="session-text">${output.text}</div>
+            `;
+            
+            setupSessionCardEvents(sessionCard, output.text, sessionId);
+            sessionsContainer.prepend(sessionCard);
+            
+            URL.revokeObjectURL(audioUrl);
+            
+            if (fileQueue.length > 0) {
+                fileInfo.textContent = `${fileQueue.length} files left in queue`;
+            } else {
+                fileInfo.textContent = 'drag & drop audio file here or click to browse';
+            }
+        }
         
-        const copyAction = sessionCard.querySelector('.copy-action');
-        copyAction.addEventListener('click', () => {
-            navigator.clipboard.writeText(output.text);
-            const originalText = copyAction.innerHTML;
-            copyAction.innerHTML = '<i class="fas fa-check"></i> copied';
-            setTimeout(() => copyAction.innerHTML = originalText, 2000);
-        });
-
-        const saveAction = sessionCard.querySelector('.save-action');
-        saveAction.addEventListener('click', () => {
-            const blob = new Blob([output.text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `transcription_${sessionId}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        const deleteAction = sessionCard.querySelector('.delete-action');
-        deleteAction.addEventListener('click', () => {
-            sessionCard.style.animation = 'fadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
-            setTimeout(() => {
-                sessionCard.remove();
-            }, 500);
-        });
-
-        sessionsContainer.prepend(sessionCard);
-        
-        URL.revokeObjectURL(audioUrl);
+        updateStatus('all tasks finished', 'check-circle');
     } catch (err) {
         updateStatus('transcription failed', 'times-circle');
         console.error(err);
     } finally {
+        isProcessing = false;
         processBtn.disabled = false;
         recordBtn.disabled = false;
         recordBtn.classList.remove('btn-processing');
         setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
+        setTimeout(() => {
+            progressBarBg.style.display = 'none';
+            progressBar.style.width = '0%';
+        }, 1000);
     }
 });
+
+function setupSessionCardEvents(card, text, id) {
+    const copyAction = card.querySelector('.copy-action');
+    copyAction.addEventListener('click', () => {
+        navigator.clipboard.writeText(text);
+        const originalText = copyAction.innerHTML;
+        copyAction.innerHTML = '<i class="fas fa-check"></i> copied';
+        setTimeout(() => copyAction.innerHTML = originalText, 2000);
+    });
+
+    const saveAction = card.querySelector('.save-action');
+    saveAction.addEventListener('click', () => {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transcription_${id}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    const deleteAction = card.querySelector('.delete-action');
+    deleteAction.addEventListener('click', () => {
+        card.style.animation = 'fadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+        setTimeout(() => card.remove(), 500);
+    });
+}
 
 // Recording Logic
 recordBtn.addEventListener('click', async () => {
@@ -281,15 +312,11 @@ recordBtn.addEventListener('click', async () => {
             mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const file = new File([audioBlob], "recorded_audio.webm", { type: 'audio/webm' });
-                handleFile(file);
+                handleFiles([file], true);
                 
                 if (currentStream) {
                     currentStream.getTracks().forEach(track => track.stop());
                     currentStream = null;
-                }
-
-                if (autoTranscribeCb.checked && currentFile) {
-                    processBtn.click();
                 }
             };
 
@@ -306,6 +333,8 @@ recordBtn.addEventListener('click', async () => {
     } else {
         mediaRecorder.stop();
         isRecording = false;
+        
+        // AGGRESSIVE REMOVAL OF RED
         recordBtn.classList.remove('recording');
         
         if (autoTranscribeCb.checked) {
@@ -323,16 +352,9 @@ const userLang = navigator.language || navigator.userLanguage;
 const baseLang = userLang.split('-')[0];
 
 const langMap = {
-    'en': 'english',
-    'ru': 'russian',
-    'es': 'spanish',
-    'fr': 'french',
-    'de': 'german',
-    'zh': 'chinese',
-    'ja': 'japanese',
-    'ko': 'korean',
-    'pt': 'portuguese',
-    'it': 'italian'
+    'en': 'english', 'ru': 'russian', 'es': 'spanish', 'fr': 'french',
+    'de': 'german', 'zh': 'chinese', 'ja': 'japanese', 'ko': 'korean',
+    'pt': 'portuguese', 'it': 'italian'
 };
 
 if (langMap[baseLang]) {
