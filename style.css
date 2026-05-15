@@ -45,31 +45,6 @@ body::before {
     z-index: 1;
 }
 
-.top-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    margin-bottom: 5px;
-}
-
-.theme-toggle {
-    position: absolute;
-    right: 0;
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: 0.3s;
-    padding: 10px;
-}
-
-.theme-toggle:hover {
-    color: var(--text);
-    transform: scale(1.1);
-}
-
 .main-title {
     font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 800;
@@ -80,6 +55,7 @@ body::before {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    margin-bottom: 5px;
 }
 
 .description {
@@ -97,6 +73,27 @@ body::before {
     border-radius: 24px;
     padding: 40px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    position: relative;
+    transition: background 0.5s ease, border-color 0.5s ease;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px;
+    z-index: 10;
+}
+
+.theme-toggle:hover {
+    color: var(--text);
+    transform: rotate(15deg) scale(1.1);
 }
 
 /* Drop Zone */
@@ -195,22 +192,31 @@ body::before {
 
 .custom-select-options {
     position: absolute;
-    top: 100%;
-    left: -2px;
-    right: -2px;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
     background: var(--bg);
-    border: 2px solid var(--accent);
-    border-top: none;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border: 1px solid var(--accent);
+    border-radius: 12px;
     overflow: hidden;
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 250px;
     overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .custom-select-container.open .custom-select-options {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-container.open {
+    border-color: var(--accent);
 }
 
 .custom-select-option {
@@ -238,11 +244,17 @@ body::before {
     display: inline-block;
 }
 
-/* Checkbox Toggle */
+/* Action Buttons Wrapper */
+.action-buttons-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .options-row {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
+    justify-content: center;
+    margin-top: 5px;
 }
 
 .toggle-checkbox {
@@ -310,7 +322,7 @@ body::before {
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+    transition: 0.4s cubic-bezier(0.2, 1, 0.3, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -328,13 +340,13 @@ body::before {
     background: rgba(255, 95, 95, 0.1);
     border-color: var(--error);
     color: var(--error);
-    animation: pulse 1.5s infinite;
+    animation: soft-pulse 2s infinite;
 }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 95, 95, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(255, 95, 95, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 95, 95, 0); }
+@keyframes soft-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 95, 95, 0.4); }
+    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 95, 95, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 95, 95, 0); }
 }
 
 .btn-primary {
