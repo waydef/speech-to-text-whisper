@@ -128,14 +128,19 @@ body::before {
 
 select {
     background: #111;
-    border: 1px solid var(--card-border);
-    color: var(--select-color, #fff);
+    border: 2px solid var(--select-color, var(--card-border));
+    box-shadow: 0 0 15px rgba(0,0,0,0);
+    color: #fff;
     padding: 12px;
     border-radius: 8px;
     font-family: inherit;
     cursor: pointer;
     outline: none;
     transition: 0.3s;
+}
+
+select.has-color {
+    box-shadow: 0 0 10px var(--select-color, transparent);
 }
 
 select:focus {
@@ -151,6 +156,10 @@ select option {
     display: flex;
     gap: 15px;
     width: 100%;
+}
+
+.btn-text {
+    transition: opacity 0.3s ease;
 }
 
 .btn-secondary {
