@@ -96,12 +96,6 @@ const modelSelectObj = setupCustomSelect('model-custom-select', (val, color) => 
     }
 });
 
-// Set initial color
-const initialSelected = document.querySelector('#model-custom-select .custom-select-option.selected');
-if (initialSelected && initialSelected.dataset.color) {
-    document.getElementById('model-custom-select').style.setProperty('--select-color', initialSelected.dataset.color);
-}
-
 // Close custom selects on outside click
 document.addEventListener('click', () => {
     document.querySelectorAll('.custom-select-container').forEach(c => c.classList.remove('open'));
@@ -110,7 +104,6 @@ document.addEventListener('click', () => {
 // Initialize model
 async function initModel() {
     const selectedModel = currentModelVal;
-
     if (recognizer && currentModel === selectedModel) return;
 
     try {
@@ -260,13 +253,22 @@ processBtn.addEventListener('click', async () => {
         isProcessing = false;
         processBtn.disabled = false;
         recordBtn.disabled = false;
-        recordBtn.className = 'btn-secondary';
+        
+        // NUCLEAR RESET
+        resetRecordBtn();
+        
         setTimeout(() => {
             progressBarBg.style.display = 'none';
             progressBar.style.width = '0%';
         }, 1000);
     }
 });
+
+function resetRecordBtn() {
+    recordBtn.className = 'btn-secondary';
+    recordBtn.style.cssText = ''; 
+    setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
+}
 
 function setupSessionCardEvents(card, text, id) {
     const copyAction = card.querySelector('.copy-action');
@@ -321,9 +323,8 @@ recordBtn.addEventListener('click', async () => {
 
             mediaRecorder.start();
             isRecording = true;
-            setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop', () => {
-                recordBtn.classList.add('recording');
-            });
+            recordBtn.classList.add('recording');
+            setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop');
             updateStatus('recording audio...', 'microphone');
         } catch (err) {
             console.error('Error accessing microphone:', err);
@@ -333,29 +334,29 @@ recordBtn.addEventListener('click', async () => {
         mediaRecorder.stop();
         isRecording = false;
         
-        // NUCLEAR REMOVAL OF RED
-        recordBtn.className = 'btn-secondary'; 
+        // NUCLEAR RESET TO ANALYZING
+        recordBtn.className = 'btn-secondary btn-processing';
+        recordBtn.style.color = 'var(--accent)';
+        recordBtn.style.borderColor = 'var(--card-border)';
+        recordBtn.style.background = 'transparent';
         
         if (autoTranscribeCb.checked) {
-            recordBtn.classList.add('btn-processing');
-            setBtnText(recordBtnText, recordBtnIcon, 'processing...', 'fa-spinner fa-spin');
+            setBtnText(recordBtnText, recordBtnIcon, 'analyzing...', 'fa-spinner fa-spin');
         } else {
-            setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
+            resetRecordBtn();
         }
         updateStatus('recording finished', 'check');
     }
 });
 
-// Auto detect language from browser
+// Auto detect language
 const userLang = navigator.language || navigator.userLanguage;
 const baseLang = userLang.split('-')[0];
-
 const langMap = {
     'en': 'english', 'ru': 'russian', 'es': 'spanish', 'fr': 'french',
     'de': 'german', 'zh': 'chinese', 'ja': 'japanese', 'ko': 'korean',
     'pt': 'portuguese', 'it': 'italian'
 };
-
 if (langMap[baseLang]) {
     const langVal = langMap[baseLang];
     if (langSelectObj) langSelectObj.setValue(langVal);
