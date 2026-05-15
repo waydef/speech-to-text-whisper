@@ -206,7 +206,7 @@ processBtn.addEventListener('click', async () => {
     try {
         while (fileQueue.length > 0) {
             const file = fileQueue.shift();
-            const fileName = file.isVoice ? 'voice recording' : file.name;
+            const fileName = file.isVoice ? 'Voice Recording' : file.name;
             
             updateStatus(`transcribing: ${fileName}`, 'spinner fa-spin');
             progressBar.style.width = '10%';
@@ -260,8 +260,7 @@ processBtn.addEventListener('click', async () => {
         isProcessing = false;
         processBtn.disabled = false;
         recordBtn.disabled = false;
-        recordBtn.classList.remove('btn-processing');
-        setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
+        recordBtn.className = 'btn-secondary';
         setTimeout(() => {
             progressBarBg.style.display = 'none';
             progressBar.style.width = '0%';
@@ -334,8 +333,8 @@ recordBtn.addEventListener('click', async () => {
         mediaRecorder.stop();
         isRecording = false;
         
-        // AGGRESSIVE REMOVAL OF RED
-        recordBtn.classList.remove('recording');
+        // NUCLEAR REMOVAL OF RED
+        recordBtn.className = 'btn-secondary'; 
         
         if (autoTranscribeCb.checked) {
             recordBtn.classList.add('btn-processing');
