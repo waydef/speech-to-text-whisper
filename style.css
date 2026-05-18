@@ -31,6 +31,10 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+*:focus, *:focus-visible {
+    outline: none !important;
+}
+
 body {
     font-family: 'Montserrat', sans-serif;
     background: var(--bg);
@@ -341,7 +345,6 @@ body::before {
 .status-container {
     margin-top: 30px;
     padding-top: 25px;
-    border-top: 1px solid var(--card-border);
 }
 
 .status-text {

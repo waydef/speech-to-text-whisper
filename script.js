@@ -323,6 +323,7 @@ recordBtn.addEventListener('click', async () => {
             setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop');
             updateStatus('recording audio...', 'microphone');
             startVisualizer(currentStream);
+            updateVisualizerState(true);
         } catch (err) {
             console.error('Error accessing microphone:', err);
             alert('microphone access denied or not available.');
@@ -330,6 +331,7 @@ recordBtn.addEventListener('click', async () => {
     } else {
         mediaRecorder.stop();
         isRecording = false;
+        updateVisualizerState(false);
         
         if (autoTranscribeCb.checked) {
             recordBtn.setAttribute('data-state', 'processing');
@@ -359,15 +361,31 @@ if (langMap[baseLang]) {
 let audioCtx = null;
 let analyser = null;
 let dataArray = null;
-let drawVisual = null;
 const visualizerCanvas = document.getElementById('visualizer-canvas');
 const visualizerContainer = document.getElementById('visualizer-container');
 const visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+const visualizerPlaceholder = document.getElementById('visualizer-placeholder');
+
+let waveColor = { r: 100, g: 100, b: 100 };
+let targetColor = { r: 100, g: 100, b: 100 };
+
+function initVisualizer() {
+    if (!visualizerCanvas) return;
+    
+    // Set dynamic size
+    const rect = visualizerContainer.getBoundingClientRect();
+    visualizerCanvas.width = rect.width * window.devicePixelRatio;
+    visualizerCanvas.height = rect.height * window.devicePixelRatio;
+    visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    dataArray = new Uint8Array(128);
+    updateVisualizerState(false);
+    
+    drawWaveLoop();
+}
 
 function startVisualizer(stream) {
     if (!visualizerCanvas) return;
-    
-    visualizerContainer.style.display = 'flex';
     
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -381,23 +399,10 @@ function startVisualizer(stream) {
     
     const bufferLength = analyser.frequencyBinCount;
     dataArray = new Uint8Array(bufferLength);
-    
-    const rect = visualizerContainer.getBoundingClientRect();
-    visualizerCanvas.width = rect.width * window.devicePixelRatio;
-    visualizerCanvas.height = rect.height * window.devicePixelRatio;
-    visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    
-    drawWave();
 }
 
-function drawWave() {
-    if (!isRecording) {
-        fadeVisualizer();
-        return;
-    }
-    
-    drawVisual = requestAnimationFrame(drawWave);
-    analyser.getByteTimeDomainData(dataArray);
+function drawWaveLoop() {
+    requestAnimationFrame(drawWaveLoop);
     
     const width = visualizerCanvas.width / window.devicePixelRatio;
     const height = visualizerCanvas.height / window.devicePixelRatio;
@@ -407,11 +412,35 @@ function drawWave() {
     visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
     visualizerCtx.fillRect(0, 0, width, height);
     
+    // Smooth color interpolation
+    waveColor.r += (targetColor.r - waveColor.r) * 0.1;
+    waveColor.g += (targetColor.g - waveColor.g) * 0.1;
+    waveColor.b += (targetColor.b - waveColor.b) * 0.1;
+    
     visualizerCtx.lineWidth = 3;
-    visualizerCtx.strokeStyle = '#5fff87';
-    visualizerCtx.shadowColor = 'rgba(95, 255, 135, 0.6)';
-    visualizerCtx.shadowBlur = 8;
+    visualizerCtx.strokeStyle = `rgb(${Math.round(waveColor.r)}, ${Math.round(waveColor.g)}, ${Math.round(waveColor.b)})`;
+    
+    const glowAlpha = (waveColor.g - 100) / (255 - 100);
+    if (glowAlpha > 0.01) {
+        visualizerCtx.shadowColor = `rgba(95, 255, 135, ${glowAlpha * 0.5})`;
+        visualizerCtx.shadowBlur = glowAlpha * 8;
+    } else {
+        visualizerCtx.shadowBlur = 0;
+    }
+    
     visualizerCtx.beginPath();
+    
+    if (isRecording && analyser) {
+        analyser.getByteTimeDomainData(dataArray);
+    } else {
+        // Draw standard subtle air wave
+        if (!dataArray || dataArray.length !== 128) {
+            dataArray = new Uint8Array(128);
+        }
+        for (let i = 0; i < dataArray.length; i++) {
+            dataArray[i] = 128 + Math.sin(Date.now() * 0.005 + i * 0.15) * 0.5;
+        }
+    }
     
     const sliceWidth = width / dataArray.length;
     let x = 0;
@@ -434,33 +463,29 @@ function drawWave() {
     visualizerCtx.shadowBlur = 0;
 }
 
-function fadeVisualizer() {
-    let count = 0;
-    function fadeStep() {
-        if (isRecording) return;
-        
-        const width = visualizerCanvas.width / window.devicePixelRatio;
-        const height = visualizerCanvas.height / window.devicePixelRatio;
-        
-        visualizerCtx.fillStyle = 'rgba(10, 10, 10, 0.2)';
-        visualizerCtx.fillRect(0, 0, width, height);
-        
-        visualizerCtx.lineWidth = 2;
-        visualizerCtx.strokeStyle = `rgba(95, 255, 135, ${Math.max(0, 1 - count / 30)})`;
-        visualizerCtx.beginPath();
-        visualizerCtx.moveTo(0, height / 2);
-        visualizerCtx.lineTo(width, height / 2);
-        visualizerCtx.stroke();
-        
-        count++;
-        if (count < 30) {
-            requestAnimationFrame(fadeStep);
-        } else {
-            visualizerContainer.style.display = 'none';
-        }
+function updateVisualizerState(active) {
+    if (!visualizerPlaceholder) return;
+    
+    if (active) {
+        visualizerPlaceholder.innerHTML = '<span class="pulse-dot"></span>слушаю эфир';
+        targetColor = { r: 95, g: 255, b: 135 }; // green
+    } else {
+        visualizerPlaceholder.innerHTML = '<span class="pulse-dot" style="display:none;"></span>ожидание';
+        targetColor = { r: 100, g: 100, b: 100 }; // gray
     }
-    fadeStep();
 }
+
+// Resize listener
+window.addEventListener('resize', () => {
+    if (!visualizerCanvas) return;
+    const rect = visualizerContainer.getBoundingClientRect();
+    visualizerCanvas.width = rect.width * window.devicePixelRatio;
+    visualizerCanvas.height = rect.height * window.devicePixelRatio;
+    visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+});
+
+// Initialize on load
+initVisualizer();
 
 // Voice Command Handling
 function handleVoiceCommand(rawText) {
