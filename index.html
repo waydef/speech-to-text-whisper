@@ -79,13 +79,24 @@
                     </button>
                 </div>
                 
-                <div class="options-row">
+                <div class="options-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
                     <label class="toggle-checkbox">
                         <input type="checkbox" id="auto-transcribe-cb" checked>
                         <span class="checkmark"></span>
                         <span class="toggle-label">auto-transcribe</span>
                     </label>
+                    <label class="toggle-checkbox">
+                        <input type="checkbox" id="voice-commands-cb" checked>
+                        <span class="checkmark"></span>
+                        <span class="toggle-label">voice commands</span>
+                    </label>
                 </div>
+            </div>
+
+            <!-- визуализатор звука -->
+            <div id="visualizer-container" style="width: 100%; height: 60px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; margin-top: 1rem; position: relative; overflow: hidden; display: none; align-items: center; justify-content: center;">
+                <canvas id="visualizer-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                <span id="visualizer-placeholder" style="color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono); text-shadow: 0 0 10px rgba(95,255,135,0.2);">слушаю эфир...</span>
             </div>
 
             <!-- Status -->

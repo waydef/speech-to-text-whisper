@@ -11,6 +11,7 @@ const progressBar = document.getElementById('progress-bar');
 const sessionsContainer = document.getElementById('sessions-container');
 const themeToggle = document.getElementById('theme-toggle');
 const autoTranscribeCb = document.getElementById('auto-transcribe-cb');
+const voiceCommandsCb = document.getElementById('voice-commands-cb');
 
 const recordBtn = document.getElementById('record-btn');
 
@@ -214,6 +215,10 @@ processBtn.addEventListener('click', async () => {
             const output = await recognizer(audioUrl, options);
             
             progressBar.style.width = '100%';
+
+            if (voiceCommandsCb && voiceCommandsCb.checked) {
+                handleVoiceCommand(output.text);
+            }
             
             const sessionCard = document.createElement('div');
             sessionCard.className = 'session-card';
@@ -317,6 +322,7 @@ recordBtn.addEventListener('click', async () => {
             recordBtn.setAttribute('data-state', 'recording');
             setBtnText(recordBtnText, recordBtnIcon, 'stop recording', 'fa-stop');
             updateStatus('recording audio...', 'microphone');
+            startVisualizer(currentStream);
         } catch (err) {
             console.error('Error accessing microphone:', err);
             alert('microphone access denied or not available.');
@@ -347,4 +353,167 @@ const langMap = {
 if (langMap[baseLang]) {
     const langVal = langMap[baseLang];
     if (langSelectObj) langSelectObj.setValue(langVal);
+}
+
+// Audio visualizer logic using Web Audio API
+let audioCtx = null;
+let analyser = null;
+let dataArray = null;
+let drawVisual = null;
+const visualizerCanvas = document.getElementById('visualizer-canvas');
+const visualizerContainer = document.getElementById('visualizer-container');
+const visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+
+function startVisualizer(stream) {
+    if (!visualizerCanvas) return;
+    
+    visualizerContainer.style.display = 'flex';
+    
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    
+    const source = audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    
+    const rect = visualizerContainer.getBoundingClientRect();
+    visualizerCanvas.width = rect.width * window.devicePixelRatio;
+    visualizerCanvas.height = rect.height * window.devicePixelRatio;
+    visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    drawWave();
+}
+
+function drawWave() {
+    if (!isRecording) {
+        fadeVisualizer();
+        return;
+    }
+    
+    drawVisual = requestAnimationFrame(drawWave);
+    analyser.getByteTimeDomainData(dataArray);
+    
+    const width = visualizerCanvas.width / window.devicePixelRatio;
+    const height = visualizerCanvas.height / window.devicePixelRatio;
+    
+    visualizerCtx.clearRect(0, 0, width, height);
+    
+    visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    visualizerCtx.fillRect(0, 0, width, height);
+    
+    visualizerCtx.lineWidth = 3;
+    visualizerCtx.strokeStyle = '#5fff87';
+    visualizerCtx.shadowColor = 'rgba(95, 255, 135, 0.6)';
+    visualizerCtx.shadowBlur = 8;
+    visualizerCtx.beginPath();
+    
+    const sliceWidth = width / dataArray.length;
+    let x = 0;
+    
+    for (let i = 0; i < dataArray.length; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * height) / 2;
+        
+        if (i === 0) {
+            visualizerCtx.moveTo(x, y);
+        } else {
+            visualizerCtx.lineTo(x, y);
+        }
+        
+        x += sliceWidth;
+    }
+    
+    visualizerCtx.lineTo(width, height / 2);
+    visualizerCtx.stroke();
+    visualizerCtx.shadowBlur = 0;
+}
+
+function fadeVisualizer() {
+    let count = 0;
+    function fadeStep() {
+        if (isRecording) return;
+        
+        const width = visualizerCanvas.width / window.devicePixelRatio;
+        const height = visualizerCanvas.height / window.devicePixelRatio;
+        
+        visualizerCtx.fillStyle = 'rgba(10, 10, 10, 0.2)';
+        visualizerCtx.fillRect(0, 0, width, height);
+        
+        visualizerCtx.lineWidth = 2;
+        visualizerCtx.strokeStyle = `rgba(95, 255, 135, ${Math.max(0, 1 - count / 30)})`;
+        visualizerCtx.beginPath();
+        visualizerCtx.moveTo(0, height / 2);
+        visualizerCtx.lineTo(width, height / 2);
+        visualizerCtx.stroke();
+        
+        count++;
+        if (count < 30) {
+            requestAnimationFrame(fadeStep);
+        } else {
+            visualizerContainer.style.display = 'none';
+        }
+    }
+    fadeStep();
+}
+
+// Voice Command Handling
+function handleVoiceCommand(rawText) {
+    const text = rawText.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+    
+    function showCommandToast(msg) {
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '2rem';
+        toast.style.right = '2rem';
+        toast.style.background = 'rgba(10, 25, 20, 0.95)';
+        toast.style.border = '1px solid var(--accent)';
+        toast.style.borderRadius = '8px';
+        toast.style.padding = '0.75rem 1.25rem';
+        toast.style.color = '#5fff87';
+        toast.style.fontFamily = 'var(--font-mono)';
+        toast.style.fontSize = '0.85rem';
+        toast.style.boxShadow = '0 8px 32px rgba(95,255,135,0.15)';
+        toast.style.zIndex = '9999';
+        toast.style.animation = 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        toast.innerHTML = `<i class="fas fa-terminal"></i> Executed: [${msg}]`;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    if (text.includes("очистить") || text.includes("стереть") || text.includes("clear history")) {
+        const cards = sessionsContainer.querySelectorAll('.session-card');
+        cards.forEach(card => {
+            card.style.animation = 'fadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => card.remove(), 500);
+        });
+        showCommandToast("очистить историю");
+    } else if (text.includes("скопировать") || text.includes("копия") || text.includes("copy text")) {
+        const firstCardText = sessionsContainer.querySelector('.session-text');
+        if (firstCardText) {
+            navigator.clipboard.writeText(firstCardText.textContent);
+            showCommandToast("скопировать буфер");
+        }
+    } else if (text.includes("сохранить") || text.includes("скачать") || text.includes("save text")) {
+        const firstCard = sessionsContainer.querySelector('.session-card');
+        if (firstCard) {
+            const saveAction = firstCard.querySelector('.save-action');
+            if (saveAction) {
+                saveAction.click();
+                showCommandToast("сохранить файл");
+            }
+        }
+    } else if (text.includes("сменить тему") || text.includes("переключить тему") || text.includes("theme togg")) {
+        themeToggle.click();
+        showCommandToast("переключить тему");
+    }
 }
