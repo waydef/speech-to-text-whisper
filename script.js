@@ -417,48 +417,61 @@ function drawWaveLoop() {
     visualizerCtx.fillRect(0, 0, width, height);
     
     // Smooth color interpolation
-    waveColor.r += (targetColor.r - waveColor.r) * 0.1;
-    waveColor.g += (targetColor.g - waveColor.g) * 0.1;
-    waveColor.b += (targetColor.b - waveColor.b) * 0.1;
+    waveColor.r += (targetColor.r - waveColor.r) * 0.08;
+    waveColor.g += (targetColor.g - waveColor.g) * 0.08;
+    waveColor.b += (targetColor.b - waveColor.b) * 0.08;
     
-    visualizerCtx.lineWidth = 3;
+    visualizerCtx.lineWidth = 2.0; // ultra-premium thin vector line
     visualizerCtx.strokeStyle = `rgb(${Math.round(waveColor.r)}, ${Math.round(waveColor.g)}, ${Math.round(waveColor.b)})`;
     
     const glowAlpha = (waveColor.g - 100) / (255 - 100);
     if (glowAlpha > 0.01) {
-        visualizerCtx.shadowColor = `rgba(95, 255, 135, ${glowAlpha * 0.5})`;
-        visualizerCtx.shadowBlur = glowAlpha * 8;
+        visualizerCtx.shadowColor = `rgba(95, 255, 135, ${glowAlpha * 0.4})`;
+        visualizerCtx.shadowBlur = glowAlpha * 6;
     } else {
         visualizerCtx.shadowBlur = 0;
     }
+    
+    let targetVolume = 0;
     
     // Process volume metrics
     if (isRecording && analyser) {
         analyser.getByteTimeDomainData(dataArray);
         
-        // Calculate Root Mean Square (RMS) volume level
-        let sum = 0;
+        // Find peak absolute deviation for ultra-sensitive envelope detection
+        let maxDev = 0;
         for (let i = 0; i < dataArray.length; i++) {
-            const dev = (dataArray[i] - 128) / 128.0;
-            sum += dev * dev;
+            const dev = Math.abs(dataArray[i] - 128);
+            if (dev > maxDev) maxDev = dev;
         }
-        const rms = Math.sqrt(sum / dataArray.length);
         
-        // Dynamic volume smoothing (eliminates sudden twitches)
-        smoothVolume += (rms - smoothVolume) * 0.15;
+        targetVolume = maxDev / 128.0; // Normalized between 0.0 and 1.0
+        
+        // Professional Attack & Release envelope smoothing
+        // Attack: 0.25 (responsive/instant swell)
+        // Release: 0.06 (extremely slow decay, preserving wave during syllable gaps)
+        const attack = 0.25;
+        const release = 0.06;
+        if (targetVolume > smoothVolume) {
+            smoothVolume += (targetVolume - smoothVolume) * attack;
+        } else {
+            smoothVolume += (targetVolume - smoothVolume) * release;
+        }
     } else {
-        // Smoothly decay back to zero
-        smoothVolume += (0 - smoothVolume) * 0.15;
+        // Natural slow release to zero
+        smoothVolume += (0 - smoothVolume) * 0.08;
     }
     
-    // Configure wave height constraints
-    const baseAmp = 2.5; // ambient height in idle mode
-    const voiceScale = 160.0; // multiplier to amplify volume level
-    const maxAmp = height * 0.42; // safe envelope boundary
+    // Configure wave height constraints using non-linear Square Root scaling
+    // Math.sqrt(smoothVolume) boosts quiet whispers to be highly visible and sensitive
+    const baseAmp = 3.0; // ambient height in idle mode
+    const maxAmp = height * 0.42; // safe envelope boundary (approx 25px)
     
-    const targetAmp = isRecording ? Math.min(baseAmp + smoothVolume * voiceScale, maxAmp) : baseAmp;
+    // Multiply by 1.3 to ensure full scale reaction on speech
+    const voiceAmp = Math.sqrt(smoothVolume) * maxAmp * 1.3;
+    const targetAmp = isRecording ? Math.min(baseAmp + voiceAmp, maxAmp) : baseAmp;
     
-    // Interpolate wave amplitude
+    // Interpolate wave amplitude extremely smoothly
     currentAmplitude += (targetAmp - currentAmplitude) * 0.12;
     
     // Render beautiful organic fluid waves
@@ -469,12 +482,12 @@ function drawWaveLoop() {
     let x = 0;
     
     for (let i = 0; i <= numPoints; i++) {
-        const t = Date.now() * 0.005;
+        const t = Date.now() * 0.0022; // elegant slow fluid speed
         
-        // 3 layers of harmonic sinewaves
-        const sin1 = Math.sin(i * 0.07 - t);
-        const sin2 = Math.sin(i * 0.13 + t * 1.4) * 0.35;
-        const sin3 = Math.sin(i * 0.22 - t * 0.7) * 0.15;
+        // 3 layers of premium harmonic sinewaves
+        const sin1 = Math.sin(i * 0.055 - t);
+        const sin2 = Math.sin(i * 0.11 + t * 1.3) * 0.35;
+        const sin3 = Math.sin(i * 0.18 - t * 0.7) * 0.15;
         
         const waveVal = (sin1 + sin2 + sin3) / 1.5; // normalized values in range [-1, 1]
         
