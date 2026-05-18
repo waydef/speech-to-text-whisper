@@ -361,6 +361,7 @@ if (langMap[baseLang]) {
 let audioCtx = null;
 let analyser = null;
 let dataArray = null;
+let smoothedDataArray = null;
 const visualizerCanvas = document.getElementById('visualizer-canvas');
 const visualizerContainer = document.getElementById('visualizer-container');
 const visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
@@ -392,7 +393,7 @@ function startVisualizer(stream) {
     }
     
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
+    analyser.fftSize = 512;
     
     const source = audioCtx.createMediaStreamSource(stream);
     source.connect(analyser);
@@ -432,22 +433,39 @@ function drawWaveLoop() {
     
     if (isRecording && analyser) {
         analyser.getByteTimeDomainData(dataArray);
-    } else {
-        // Draw standard subtle air wave
-        if (!dataArray || dataArray.length !== 128) {
-            dataArray = new Uint8Array(128);
+        
+        if (!smoothedDataArray || smoothedDataArray.length !== dataArray.length) {
+            smoothedDataArray = new Float32Array(dataArray.length);
+            smoothedDataArray.fill(128);
         }
+        
+        // Low-pass filter to smooth voice wave jittering
         for (let i = 0; i < dataArray.length; i++) {
-            dataArray[i] = 128 + Math.sin(Date.now() * 0.005 + i * 0.15) * 0.5;
+            smoothedDataArray[i] += (dataArray[i] - smoothedDataArray[i]) * 0.25;
+        }
+    } else {
+        // Draw standard smooth subtle idle wave
+        if (!smoothedDataArray || smoothedDataArray.length !== 128) {
+            smoothedDataArray = new Float32Array(128);
+            smoothedDataArray.fill(128);
+        }
+        for (let i = 0; i < smoothedDataArray.length; i++) {
+            const targetVal = 128 + Math.sin(Date.now() * 0.003 + i * 0.08) * 3;
+            smoothedDataArray[i] += (targetVal - smoothedDataArray[i]) * 0.1;
         }
     }
     
-    const sliceWidth = width / dataArray.length;
+    const len = isRecording && analyser ? dataArray.length : 128;
+    const sliceWidth = width / len;
     let x = 0;
     
-    for (let i = 0; i < dataArray.length; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = (v * height) / 2;
+    for (let i = 0; i < len; i++) {
+        // Amplify deviation for visual excellence
+        const deviation = smoothedDataArray[i] - 128;
+        const amplifiedDeviation = isRecording ? deviation * 1.8 : deviation;
+        const v = 128 + amplifiedDeviation;
+        const norm = v / 128.0;
+        const y = (norm * height) / 2;
         
         if (i === 0) {
             visualizerCtx.moveTo(x, y);
@@ -464,14 +482,17 @@ function drawWaveLoop() {
 }
 
 function updateVisualizerState(active) {
-    if (!visualizerPlaceholder) return;
-    
     if (active) {
-        visualizerPlaceholder.innerHTML = '<span class="pulse-dot"></span>слушаю эфир';
         targetColor = { r: 95, g: 255, b: 135 }; // green
     } else {
-        visualizerPlaceholder.innerHTML = '<span class="pulse-dot" style="display:none;"></span>ожидание';
         targetColor = { r: 100, g: 100, b: 100 }; // gray
+    }
+    
+    if (visualizerPlaceholder) {
+        const dot = visualizerPlaceholder.querySelector('.pulse-dot');
+        if (dot) {
+            dot.style.display = active ? 'inline-block' : 'none';
+        }
     }
 }
 
