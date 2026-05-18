@@ -362,6 +362,9 @@ let audioCtx = null;
 let analyser = null;
 let dataArray = null;
 let smoothedDataArray = null;
+let smoothVolume = 0;
+let currentAmplitude = 2.5;
+
 const visualizerCanvas = document.getElementById('visualizer-canvas');
 const visualizerContainer = document.getElementById('visualizer-container');
 const visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
@@ -429,43 +432,56 @@ function drawWaveLoop() {
         visualizerCtx.shadowBlur = 0;
     }
     
-    visualizerCtx.beginPath();
-    
+    // Process volume metrics
     if (isRecording && analyser) {
         analyser.getByteTimeDomainData(dataArray);
         
-        if (!smoothedDataArray || smoothedDataArray.length !== dataArray.length) {
-            smoothedDataArray = new Float32Array(dataArray.length);
-            smoothedDataArray.fill(128);
-        }
-        
-        // Low-pass filter to smooth voice wave jittering
+        // Calculate Root Mean Square (RMS) volume level
+        let sum = 0;
         for (let i = 0; i < dataArray.length; i++) {
-            smoothedDataArray[i] += (dataArray[i] - smoothedDataArray[i]) * 0.25;
+            const dev = (dataArray[i] - 128) / 128.0;
+            sum += dev * dev;
         }
+        const rms = Math.sqrt(sum / dataArray.length);
+        
+        // Dynamic volume smoothing (eliminates sudden twitches)
+        smoothVolume += (rms - smoothVolume) * 0.15;
     } else {
-        // Draw standard smooth subtle idle wave
-        if (!smoothedDataArray || smoothedDataArray.length !== 128) {
-            smoothedDataArray = new Float32Array(128);
-            smoothedDataArray.fill(128);
-        }
-        for (let i = 0; i < smoothedDataArray.length; i++) {
-            const targetVal = 128 + Math.sin(Date.now() * 0.003 + i * 0.08) * 3;
-            smoothedDataArray[i] += (targetVal - smoothedDataArray[i]) * 0.1;
-        }
+        // Smoothly decay back to zero
+        smoothVolume += (0 - smoothVolume) * 0.15;
     }
     
-    const len = isRecording && analyser ? dataArray.length : 128;
-    const sliceWidth = width / len;
+    // Configure wave height constraints
+    const baseAmp = 2.5; // ambient height in idle mode
+    const voiceScale = 160.0; // multiplier to amplify volume level
+    const maxAmp = height * 0.42; // safe envelope boundary
+    
+    const targetAmp = isRecording ? Math.min(baseAmp + smoothVolume * voiceScale, maxAmp) : baseAmp;
+    
+    // Interpolate wave amplitude
+    currentAmplitude += (targetAmp - currentAmplitude) * 0.12;
+    
+    // Render beautiful organic fluid waves
+    visualizerCtx.beginPath();
+    
+    const numPoints = 120;
+    const sliceWidth = width / numPoints;
     let x = 0;
     
-    for (let i = 0; i < len; i++) {
-        // Amplify deviation for visual excellence
-        const deviation = smoothedDataArray[i] - 128;
-        const amplifiedDeviation = isRecording ? deviation * 1.8 : deviation;
-        const v = 128 + amplifiedDeviation;
-        const norm = v / 128.0;
-        const y = (norm * height) / 2;
+    for (let i = 0; i <= numPoints; i++) {
+        const t = Date.now() * 0.005;
+        
+        // 3 layers of harmonic sinewaves
+        const sin1 = Math.sin(i * 0.07 - t);
+        const sin2 = Math.sin(i * 0.13 + t * 1.4) * 0.35;
+        const sin3 = Math.sin(i * 0.22 - t * 0.7) * 0.15;
+        
+        const waveVal = (sin1 + sin2 + sin3) / 1.5; // normalized values in range [-1, 1]
+        
+        // Pinching curve (0 at the edges, 1 in the middle)
+        const envelope = Math.sin((i / numPoints) * Math.PI);
+        
+        const y = height / 2 + waveVal * currentAmplitude * envelope;
         
         if (i === 0) {
             visualizerCtx.moveTo(x, y);
