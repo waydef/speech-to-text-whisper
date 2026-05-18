@@ -398,3 +398,19 @@ body::before {
 @media (max-width: 600px) {
     .controls-row, .action-buttons { grid-template-columns: 1fr; flex-direction: column; }
 }
+
+@keyframes visualizer-pulse {
+    0% { opacity: 0.45; }
+    50% { opacity: 1; }
+    100% { opacity: 0.45; }
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #5fff87;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #5fff87;
+    animation: visualizer-pulse 1.8s infinite ease-in-out;
+}
+
