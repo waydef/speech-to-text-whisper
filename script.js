@@ -1,6 +1,6 @@
 import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-// DOM Elements
+// dom elements
 const dropZone = document.getElementById('drop-zone');
 const audioInput = document.getElementById('audio-input');
 const fileInfo = document.getElementById('file-info');
@@ -34,7 +34,7 @@ function setBtnText(btnTextEl, btnIconEl, text, iconClass, callback) {
     if (callback) callback();
 }
 
-// Theme Toggle
+// theme toggle
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('light-theme');
     const icon = themeToggle.querySelector('i');
@@ -45,7 +45,7 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
-// Setup Custom Selects
+// setup custom selects
 function setupCustomSelect(containerId, onChangeCallback) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -97,12 +97,12 @@ const modelSelectObj = setupCustomSelect('model-custom-select', (val, color) => 
     }
 });
 
-// Close custom selects on outside click
+// close selects on outside click
 document.addEventListener('click', () => {
     document.querySelectorAll('.custom-select-container').forEach(c => c.classList.remove('open'));
 });
 
-// Initialize model
+// load model
 async function initModel() {
     const selectedModel = currentModelVal;
     if (recognizer && currentModel === selectedModel) return;
@@ -135,7 +135,7 @@ function updateStatus(msg, icon) {
     statusText.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
 }
 
-// Drag & Drop Logic
+// drag and drop files
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('dragover');
@@ -180,7 +180,7 @@ function handleFiles(files, isVoice = false) {
     }
 }
 
-// Processing
+// start transcribing
 processBtn.addEventListener('click', async () => {
     if (!recognizer || currentModel !== currentModelVal) {
         await initModel();
@@ -256,7 +256,7 @@ processBtn.addEventListener('click', async () => {
         processBtn.disabled = false;
         recordBtn.disabled = false;
         
-        // RESET BUTTON STATE
+        // reset button state
         recordBtn.removeAttribute('data-state');
         setBtnText(recordBtnText, recordBtnIcon, 'record voice', 'fa-microphone-lines');
         
@@ -293,7 +293,7 @@ function setupSessionCardEvents(card, text, id) {
     });
 }
 
-// Recording Logic
+// record from mic
 recordBtn.addEventListener('click', async () => {
     if (!isRecording) {
         try {
@@ -344,7 +344,7 @@ recordBtn.addEventListener('click', async () => {
     }
 });
 
-// Auto detect language
+// auto detect user language
 const userLang = navigator.language || navigator.userLanguage;
 const baseLang = userLang.split('-')[0];
 const langMap = {
@@ -357,7 +357,7 @@ if (langMap[baseLang]) {
     if (langSelectObj) langSelectObj.setValue(langVal);
 }
 
-// Audio visualizer logic using Web Audio API
+// visualizer logic
 let audioCtx = null;
 let analyser = null;
 let dataArray = null;
@@ -376,7 +376,7 @@ let targetColor = { r: 100, g: 100, b: 100 };
 function initVisualizer() {
     if (!visualizerCanvas) return;
     
-    // Set dynamic size
+    // scale canvas
     const rect = visualizerContainer.getBoundingClientRect();
     visualizerCanvas.width = rect.width * window.devicePixelRatio;
     visualizerCanvas.height = rect.height * window.devicePixelRatio;
@@ -416,12 +416,12 @@ function drawWaveLoop() {
     visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
     visualizerCtx.fillRect(0, 0, width, height);
     
-    // Smooth color interpolation
+    // smooth color change
     waveColor.r += (targetColor.r - waveColor.r) * 0.08;
     waveColor.g += (targetColor.g - waveColor.g) * 0.08;
     waveColor.b += (targetColor.b - waveColor.b) * 0.08;
     
-    visualizerCtx.lineWidth = 2.0; // ultra-premium thin vector line
+    visualizerCtx.lineWidth = 2.0; // thin vector line
     visualizerCtx.strokeStyle = `rgb(${Math.round(waveColor.r)}, ${Math.round(waveColor.g)}, ${Math.round(waveColor.b)})`;
     
     const glowAlpha = (waveColor.g - 100) / (255 - 100);
@@ -434,22 +434,22 @@ function drawWaveLoop() {
     
     let targetVolume = 0;
     
-    // Process volume metrics
+    // process volume data
     if (isRecording && analyser) {
         analyser.getByteTimeDomainData(dataArray);
         
-        // Find peak absolute deviation for ultra-sensitive envelope detection
+        // peak deviation for envelope detection
         let maxDev = 0;
         for (let i = 0; i < dataArray.length; i++) {
             const dev = Math.abs(dataArray[i] - 128);
             if (dev > maxDev) maxDev = dev;
         }
         
-        targetVolume = maxDev / 128.0; // Normalized between 0.0 and 1.0
+        targetVolume = maxDev / 128.0; // normal range from 0.0 to 1.0
         
-        // Professional Attack & Release envelope smoothing
-        // Attack: 0.25 (responsive/instant swell)
-        // Release: 0.06 (extremely slow decay, preserving wave during syllable gaps)
+        // smooth attack and release
+        // attack rate
+        // release rate
         const attack = 0.25;
         const release = 0.06;
         if (targetVolume > smoothVolume) {
@@ -458,23 +458,23 @@ function drawWaveLoop() {
             smoothVolume += (targetVolume - smoothVolume) * release;
         }
     } else {
-        // Natural slow release to zero
+        // slow decay to zero
         smoothVolume += (0 - smoothVolume) * 0.08;
     }
     
-    // Configure wave height constraints using non-linear Square Root scaling
-    // Math.sqrt(smoothVolume) boosts quiet whispers to be highly visible and sensitive
-    const baseAmp = 3.0; // ambient height in idle mode
-    const maxAmp = height * 0.42; // safe envelope boundary (approx 25px)
+    // height constraints with square root
+    // square root boosts quiet speech
+    const baseAmp = 3.0; // base height when idle
+    const maxAmp = height * 0.42; // max height limit
     
-    // Multiply by 1.3 to ensure full scale reaction on speech
+    // multiplier for full scale reaction
     const voiceAmp = Math.sqrt(smoothVolume) * maxAmp * 1.3;
     const targetAmp = isRecording ? Math.min(baseAmp + voiceAmp, maxAmp) : baseAmp;
     
-    // Interpolate wave amplitude extremely smoothly
+    // smooth amplitude transition
     currentAmplitude += (targetAmp - currentAmplitude) * 0.12;
     
-    // Render beautiful organic fluid waves
+    // draw fluid waves
     visualizerCtx.beginPath();
     
     const numPoints = 120;
@@ -482,16 +482,16 @@ function drawWaveLoop() {
     let x = 0;
     
     for (let i = 0; i <= numPoints; i++) {
-        const t = Date.now() * 0.0022; // elegant slow fluid speed
+        const t = Date.now() * 0.0022; // speed coefficient
         
-        // 3 layers of premium harmonic sinewaves
+        // three sine waves for organic look
         const sin1 = Math.sin(i * 0.055 - t);
         const sin2 = Math.sin(i * 0.11 + t * 1.3) * 0.35;
         const sin3 = Math.sin(i * 0.18 - t * 0.7) * 0.15;
         
-        const waveVal = (sin1 + sin2 + sin3) / 1.5; // normalized values in range [-1, 1]
+        const waveVal = (sin1 + sin2 + sin3) / 1.5; // normal range is -1 to 1
         
-        // Pinching curve (0 at the edges, 1 in the middle)
+        // pinch curve
         const envelope = Math.sin((i / numPoints) * Math.PI);
         
         const y = height / 2 + waveVal * currentAmplitude * envelope;
@@ -525,7 +525,7 @@ function updateVisualizerState(active) {
     }
 }
 
-// Resize listener
+// window resize
 window.addEventListener('resize', () => {
     if (!visualizerCanvas) return;
     const rect = visualizerContainer.getBoundingClientRect();
@@ -534,10 +534,10 @@ window.addEventListener('resize', () => {
     visualizerCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
 });
 
-// Initialize on load
+// init on load
 initVisualizer();
 
-// Voice Command Handling
+// handle voice commands
 function handleVoiceCommand(rawText) {
     const text = rawText.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
     

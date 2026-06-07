@@ -21,14 +21,14 @@
             <button id="theme-toggle" class="theme-toggle-btn" title="toggle theme">
                 <i class="fas fa-circle-half-stroke"></i>
             </button>
-            <!-- Drop Zone -->
+            <!-- drop zone -->
             <div id="drop-zone" class="drop-zone">
                 <i class="fas fa-wave-square"></i>
                 <p id="file-info">drag & drop audio file here or click to browse</p>
                 <input type="file" id="audio-input" accept="audio/*" style="display: none;" multiple>
             </div>
 
-            <!-- Controls -->
+            <!-- controls -->
             <div class="controls-row">
                 <div class="control-group">
                     <label>language</label>
@@ -93,13 +93,13 @@
                 </div>
             </div>
 
-            <!-- визуализатор звука -->
+            <!-- audio visualizer -->
             <div id="visualizer-container" style="width: 100%; height: 60px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; margin-top: 1rem; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                 <canvas id="visualizer-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
                 <span id="visualizer-placeholder" style="position: absolute; top: 12px; left: 12px; pointer-events: none; z-index: 10; display: flex; align-items: center;"><span class="pulse-dot"></span></span>
             </div>
 
-            <!-- Status -->
+            <!-- status -->
             <div class="status-container">
                 <div id="status-text" class="status-text">
                     <i class="fas fa-info-circle"></i> ready
@@ -109,9 +109,9 @@
                 </div>
             </div>
 
-            <!-- Sessions -->
+            <!-- sessions -->
             <div id="sessions-container" class="sessions-container">
-                <!-- Session cards will be appended here -->
+                <!-- session cards are added here -->
             </div>
         </div>
     </div>

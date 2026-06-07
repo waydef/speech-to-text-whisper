@@ -1,4 +1,4 @@
-/* Whisper Local Studio - Premium Minimalist Design */
+/* whisper local studio, clean design */
 
 :root {
     --bg: #050505;
@@ -318,7 +318,7 @@ body::before {
     box-shadow: 0 15px 30px var(--accent-glow);
 }
 
-/* State Management */
+/* state management */
 .btn-secondary[data-state="recording"] {
     background: rgba(255, 95, 95, 0.15) !important;
     border-color: var(--error) !important;
