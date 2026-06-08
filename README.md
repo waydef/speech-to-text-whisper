@@ -1,17 +1,17 @@
 # speech-to-text-whisper
 
-Offline tool for local speech-to-text transcription directly in the browser. No external servers, API keys, or data leaks. Everything runs client-side using transformers.js and ONNX Runtime Web.
+an offline, browser-based tool for converting speech to text locally. no external servers, api keys, or data uploads. everything runs on the client side using transformers.js and onnx runtime web.
 
-Check out the live page at https://waydef.github.io/speech-to-text-whisper/
+check out the live page at https://waydef.github.io/speech-to-text-whisper/
 
 ## features
 
-- privacy: audio is not uploaded to the internet. the model is downloaded once to the browser cache, after which transcription works fully locally and offline.
-- quality selection: support for models of different sizes, from tiny (~40mb) for quick drafts to medium (~750mb) for high-accuracy recognition.
-- microphone recording: record voice in real time or drag and drop any audio file into the window.
-- auto-transcription: starts transcription immediately after adding a file or stopping a recording.
-- interface: dark theme, glassmorphism card designs, Montserrat typography, smooth progress animations, quick export to .txt, and one-click copy.
+- fully offline: your audio never leaves your device. after downloading the model to your browser cache, the tool works without an internet connection.
+- model options: choose between different model sizes, ranging from a fast tiny model (~40mb) to a more accurate medium model (~750mb).
+- input methods: record voice directly from your microphone or drop any audio file into the browser window.
+- quick export: copy the transcribed text in one click or download it as a .txt file.
+- design: dark theme layout using simple glass cards and clean progress bars.
 
-## launch
+## running it
 
-Simply open `index.html` locally. For proper model caching and dynamic theme coloring via ColorThief, it is recommended to run the app through any local web server (e.g. `python -m http.server 8000`).
+open index.html in a browser. for model caching to work correctly, you should run it through a local web server (for example, python -m http.server 8000).
